@@ -1,0 +1,47 @@
+[
+    {
+        "id": 1,
+        "name": "Andorra la Vella",
+        "state": 1,
+        "country": 1,
+        "latitude": 42.50779,
+        "longitude": 1.52109,
+        "timezone": "Europe/Andorra"
+    },
+    {
+        "id": 2,
+        "name": "Kabul",
+        "state": null,
+        "country": 1,
+        "latitude": 34.5553,
+        "longitude": 69.2075,
+        "timezone": "Asia/Kabul"
+    },
+    {
+        "id": 3,
+        "name": "Addis Ababa",
+        "state": 1,
+        "country": 2,
+        "latitude": 9.03,
+        "longitude": 38.74,
+        "timezone": "Africa/Addis_Ababa"
+    },
+    {
+        "id": 4,
+        "name": "Nairobi",
+        "state": null,
+        "country": 3,
+        "latitude": -1.286389,
+        "longitude": 36.817223,
+        "timezone": "Africa/Nairobi"
+    },
+    {
+        "id": 5,
+        "name": "Tokyo",
+        "state": null,
+        "country": 4,
+        "latitude": 35.682839,
+        "longitude": 139.759455,
+        "timezone": "Asia/Tokyo"
+    }
+]

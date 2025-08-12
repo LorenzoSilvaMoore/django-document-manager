@@ -1,0 +1,57 @@
+[
+    {
+        "id": 1,
+        "name": "Afghanistan",
+        "iso2": "AF",
+        "iso3": "AFG",
+        "numeric_code": "004",
+        "capital": "Kabul",
+        "currency": "AFN",
+        "region": "Asia",
+        "subregion": "Southern Asia"
+    },
+    {
+        "id": 2,
+        "name": "Albania",
+        "iso2": "AL",
+        "iso3": "ALB",
+        "numeric_code": "008",
+        "capital": "Tirana",
+        "currency": "ALL",
+        "region": "Europe",
+        "subregion": "Southern Europe"
+    },
+    {
+        "id": 3,
+        "name": "Algeria",
+        "iso2": "DZ",
+        "iso3": "DZA",
+        "numeric_code": "012",
+        "capital": "Algiers",
+        "currency": "DZD",
+        "region": "Africa",
+        "subregion": "Northern Africa"
+    },
+    {
+        "id": 4,
+        "name": "Andorra",
+        "iso2": "AD",
+        "iso3": "AND",
+        "numeric_code": "020",
+        "capital": "Andorra la Vella",
+        "currency": "EUR",
+        "region": "Europe",
+        "subregion": "Southern Europe"
+    },
+    {
+        "id": 5,
+        "name": "Angola",
+        "iso2": "AO",
+        "iso3": "AGO",
+        "numeric_code": "024",
+        "capital": "Luanda",
+        "currency": "AOA",
+        "region": "Africa",
+        "subregion": "Sub-Saharan Africa"
+    }
+]

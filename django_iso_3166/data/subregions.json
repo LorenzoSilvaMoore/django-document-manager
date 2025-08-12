@@ -1,0 +1,57 @@
+[
+    {
+        "id": 1,
+        "name": "Northern Africa",
+        "translations": {
+            "en": "Northern Africa",
+            "fr": "Afrique du Nord",
+            "es": "Norte de África",
+            "de": "Nordafrika",
+            "zh": "北部非洲"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Sub-Saharan Africa",
+        "translations": {
+            "en": "Sub-Saharan Africa",
+            "fr": "Afrique subsaharienne",
+            "es": "África subsahariana",
+            "de": "Sub-Sahara-Afrika",
+            "zh": "撒哈拉以南非洲"
+        }
+    },
+    {
+        "id": 3,
+        "name": "Eastern Africa",
+        "translations": {
+            "en": "Eastern Africa",
+            "fr": "Afrique de l'Est",
+            "es": "África Oriental",
+            "de": "Ostafrika",
+            "zh": "东非"
+        }
+    },
+    {
+        "id": 4,
+        "name": "Western Africa",
+        "translations": {
+            "en": "Western Africa",
+            "fr": "Afrique de l'Ouest",
+            "es": "África Occidental",
+            "de": "Westafrika",
+            "zh": "西非"
+        }
+    },
+    {
+        "id": 5,
+        "name": "Central Africa",
+        "translations": {
+            "en": "Central Africa",
+            "fr": "Afrique centrale",
+            "es": "África Central",
+            "de": "Zentralafrika",
+            "zh": "中非"
+        }
+    }
+]

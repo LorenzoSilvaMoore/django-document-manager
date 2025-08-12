@@ -1,0 +1,74 @@
+[
+    {
+        "id": 1,
+        "name": "Africa",
+        "translations": {
+            "en": "Africa",
+            "fr": "Afrique",
+            "es": "África",
+            "de": "Afrika",
+            "zh": "非洲",
+            "ru": "Африка"
+        }
+    },
+    {
+        "id": 2,
+        "name": "Asia",
+        "translations": {
+            "en": "Asia",
+            "fr": "Asie",
+            "es": "Asia",
+            "de": "Asien",
+            "zh": "亚洲",
+            "ru": "Азия"
+        }
+    },
+    {
+        "id": 3,
+        "name": "Europe",
+        "translations": {
+            "en": "Europe",
+            "fr": "Europe",
+            "es": "Europa",
+            "de": "Europa",
+            "zh": "欧洲",
+            "ru": "Европа"
+        }
+    },
+    {
+        "id": 4,
+        "name": "North America",
+        "translations": {
+            "en": "North America",
+            "fr": "Amérique du Nord",
+            "es": "América del Norte",
+            "de": "Nordamerika",
+            "zh": "北美洲",
+            "ru": "Северная Америка"
+        }
+    },
+    {
+        "id": 5,
+        "name": "Oceania",
+        "translations": {
+            "en": "Oceania",
+            "fr": "Océanie",
+            "es": "Oceanía",
+            "de": "Ozeanien",
+            "zh": "大洋洲",
+            "ru": "Океания"
+        }
+    },
+    {
+        "id": 6,
+        "name": "South America",
+        "translations": {
+            "en": "South America",
+            "fr": "Amérique du Sud",
+            "es": "América del Sur",
+            "de": "Südamerika",
+            "zh": "南美洲",
+            "ru": "Южная Америка"
+        }
+    }
+]
