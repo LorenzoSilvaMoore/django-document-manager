@@ -1,5 +1,3 @@
-# filepath: django-iso-3166/README.md
-
 # Django ISO 3166
 
 Django ISO 3166 is a Django application that provides models for managing geographical data, including cities, countries, regions, subregions, and states. This package allows for easy integration and management of geographical information in Django projects.
@@ -7,7 +5,8 @@ Django ISO 3166 is a Django application that provides models for managing geogra
 ## Features
 
 - Models for cities, countries, regions, subregions, and states.
-- Custom management command to bootstrap the database with initial data.
+- Comprehensive PostgreSQL dataset with 150k+ geographic records
+- Custom management command to load SQL data into database
 - Easy integration with Django's admin interface for data management.
 
 ## Installation
@@ -35,10 +34,19 @@ pip install django-iso-3166
    python manage.py migrate
    ```
 
-3. **Bootstrap the Database**: Use the custom management command to populate the database with initial data.
+3. **Load Geographic Data**: Use the custom management command to populate the database with comprehensive geographic data.
 
    ```bash
-   python manage.py bootstrap_geo
+   python manage.py create_iso_3166
+   ```
+
+   You can also specify custom options:
+   ```bash
+   # Use a custom SQL file
+   python manage.py create_iso_3166 --sql-file /path/to/custom.sql
+   
+   # Target a specific database
+   python manage.py create_iso_3166 --database my_geo_db
    ```
 
 ## Models
