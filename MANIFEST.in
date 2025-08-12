@@ -2,16 +2,13 @@ include README.md
 include LICENSE
 include CHANGELOG.md
 include .gitignore
-include pytest.ini
-include runtests.py
-recursive-include django_iso_3166/data *.json
+recursive-include django_iso_3166/data *.sql
 recursive-include django_iso_3166/models *.py
 recursive-include django_iso_3166/management/commands *.py
 recursive-include django_iso_3166/migrations *.py
 include django_iso_3166/__init__.py
 include django_iso_3166/apps.py
 include django_iso_3166/admin.py
-recursive-include tests *.py
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *~

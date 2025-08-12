@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-iso-3166"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Django app for managing geographical data including cities, countries, regions, states, and subregions."
 authors = [
     {name = "Lorenzo Silva", email = "your.email@example.com"}

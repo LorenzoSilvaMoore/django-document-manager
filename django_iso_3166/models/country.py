@@ -1,7 +1,6 @@
 from django.db import models
 
 class Country(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     iso3 = models.CharField(max_length=3, blank=True, null=True)
     numeric_code = models.CharField(max_length=3, blank=True, null=True)
@@ -38,6 +37,10 @@ class Country(models.Model):
         return self.name
 
     class Meta:
+        managed = False
+        db_table = 'countries'
+
+        verbose_name = "Country"
         verbose_name_plural = "Countries"
         indexes = [
             models.Index(fields=['region_id']),

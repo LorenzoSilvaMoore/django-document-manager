@@ -22,5 +22,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-08-11
 
 ### Added
-- Initial release of django-iso-3166
+- Initial alpha release of django-iso-3166
 - Basic geographical models and data loading functionality

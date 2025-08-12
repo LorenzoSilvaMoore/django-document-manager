@@ -2,7 +2,6 @@ from django.db import models
 from django.utils import timezone as tz
 
 class City(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     state = models.ForeignKey('State', on_delete=models.CASCADE, related_name='cities',
                              db_column='state_id')
@@ -24,6 +23,9 @@ class City(models.Model):
         return self.name
 
     class Meta:
+        managed = False
+        db_table = 'cities'
+
         verbose_name = 'City'
         verbose_name_plural = 'Cities'
         indexes = [

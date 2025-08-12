@@ -1,7 +1,6 @@
 from django.db import models
 
 class State(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=255)
     country = models.ForeignKey('Country', on_delete=models.CASCADE, related_name='states',
                                db_column='country_id')
@@ -27,6 +26,9 @@ class State(models.Model):
         return self.name
 
     class Meta:
+        managed = False
+        db_table = 'states'
+
         verbose_name = 'State'
         verbose_name_plural = 'States'
         indexes = [

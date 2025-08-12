@@ -1,7 +1,6 @@
 from django.db import models
 
 class Subregion(models.Model):
-    id = models.BigAutoField(primary_key=True)
     name = models.CharField(max_length=100)
     translations = models.TextField(blank=True, null=True)  # Changed from JSONField to TextField
     region = models.ForeignKey('Region', on_delete=models.CASCADE, related_name='subregions')
@@ -15,5 +14,8 @@ class Subregion(models.Model):
         return self.name
 
     class Meta:
+        managed = False
+        db_table = 'subregions'
+
         verbose_name = "Subregion"
         verbose_name_plural = "Subregions"
