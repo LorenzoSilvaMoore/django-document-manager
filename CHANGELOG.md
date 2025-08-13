@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-08-13
+
+### Added
+
+- Version tracking with `__version__` attribute in package `__init__.py`
+- Enhanced Django app configuration with proper labels and verbose names
+- Explicit `app_label` in all model Meta classes for better Django integration
+- Default app config declaration for improved Django compatibility
+
+### Changed
+
+- Updated setup.py with correct author email and GitHub repository URLs
+- Improved app configuration with `ready()` method for proper model loading
+- Enhanced model Meta configurations for better Django admin integration
+
+### Removed
+
+- Legacy test infrastructure (`runtests.py`) - cleaned up for production release
+
 ## [0.1.1] - 2025-08-11
 
 ### Added

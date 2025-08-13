@@ -16,6 +16,7 @@ class Subregion(models.Model):
     class Meta:
         managed = False
         db_table = 'subregions'
+        app_label = 'django_iso_3166'
 
         verbose_name = "Subregion"
         verbose_name_plural = "Subregions"

@@ -39,6 +39,7 @@ class Country(models.Model):
     class Meta:
         managed = False
         db_table = 'countries'
+        app_label = 'django_iso_3166'
 
         verbose_name = "Country"
         verbose_name_plural = "Countries"

@@ -8,7 +8,7 @@ def read_readme():
 
 setup(
     name="django-iso-3166",
-    version="0.1.1",
+    version="0.1.2",
     packages=find_packages(),
     include_package_data=True,
     package_data={
@@ -25,13 +25,13 @@ setup(
     long_description=read_readme(),
     long_description_content_type="text/markdown",
     author="Lorenzo Silva",
-    author_email="your.email@example.com",
+    author_email="lorenzo.smb.rayo@gmail.com",
     license="MIT",
-    url="https://github.com/yourusername/django-iso-3166",
+    url="https://github.com/LorenzoSilvaMoore/django-iso-3166",
     project_urls={
-        "Bug Tracker": "https://github.com/yourusername/django-iso-3166/issues",
-        "Documentation": "https://github.com/yourusername/django-iso-3166#readme",
-        "Source Code": "https://github.com/yourusername/django-iso-3166",
+        "Bug Tracker": "https://github.com/LorenzoSilvaMoore/django-iso-3166/issues",
+        "Documentation": "https://github.com/LorenzoSilvaMoore/django-iso-3166#readme",
+        "Source Code": "https://github.com/LorenzoSilvaMoore/django-iso-3166",
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
