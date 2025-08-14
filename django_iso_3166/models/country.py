@@ -38,7 +38,7 @@ class Country(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'countries'
+        db_table = 'iso_countries'
         app_label = 'django_iso_3166'
 
         verbose_name = "Country"

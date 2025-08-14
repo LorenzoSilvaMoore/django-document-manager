@@ -24,7 +24,7 @@ class City(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'cities'
+        db_table = 'iso_cities'
         app_label = 'django_iso_3166'
 
         verbose_name = 'City'

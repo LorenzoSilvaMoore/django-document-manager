@@ -8,12 +8,12 @@ def read_readme():
 
 setup(
     name="django-iso-3166",
-    version="0.1.2",
+    version="0.1.3",
     packages=find_packages(),
     include_package_data=True,
     package_data={
         'django_iso_3166': [
-            'data/*.json',
+            'data/*.sql',
             'migrations/*.py',
         ],
     },

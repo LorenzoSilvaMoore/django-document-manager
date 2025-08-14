@@ -27,7 +27,7 @@ class State(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'states'
+        db_table = 'iso_states'
         app_label = 'django_iso_3166'
 
         verbose_name = 'State'

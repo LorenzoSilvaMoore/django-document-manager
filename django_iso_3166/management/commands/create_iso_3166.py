@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
 from django.db import connection
 from pathlib import Path
-import os
 
 class Command(BaseCommand):
     help = 'Load geographic data from SQL file into the database'

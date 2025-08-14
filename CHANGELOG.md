@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-08-14
+
+### Changed
+
+- Updated database table names with `iso_` prefix for better namespace isolation
+- Optimized imports and removed unused dependencies in management commands
+- Simplified Django timezone usage in City model for better consistency
+- Streamlined app configuration by removing unnecessary `ready()` method
+
+### Removed
+
+- Deprecated `default_app_config` from package `__init__.py` (Django 3.2+ compatibility)
+- Unused `os` import in `create_iso_3166` management command
+- Redundant development dependencies (`pytest-cov`, `mypy`, `pre-commit`) from optional dependencies
+
+### Fixed
+
+- Package data configuration now correctly references `.sql` files instead of deprecated `.json` files
+- Improved code maintainability with cleaner import structure
+
 ## [0.1.2] - 2025-08-13
 
 ### Added

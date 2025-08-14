@@ -14,7 +14,7 @@ class Region(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'regions'
+        db_table = 'iso_regions'
         app_label = 'django_iso_3166'
 
         verbose_name = "Region"

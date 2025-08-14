@@ -5,6 +5,3 @@ class DjangoIso3166Config(AppConfig):
     name = 'django_iso_3166'
     label = 'django_iso_3166'
     verbose_name = 'Django ISO 3166'
-    
-    def ready(self):
-        from . import models
