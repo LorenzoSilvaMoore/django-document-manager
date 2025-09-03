@@ -3,11 +3,11 @@ requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "django-iso-3166"
+name = "django-document-manager"
 version = "0.1.3"
-description = "A Django app for managing geographical data including cities, countries, regions, states, and subregions."
+description = "A lightweight Django app for managing documents, folders, tags and optional versioning for files."
 authors = [
-    {name = "Lorenzo Silva", email = "your.email@example.com"}
+    {name = "Lorenzo Silva", email = "lorenzo.smb.rayo@gmail.com"}
 ]
 license = {text = "MIT"}
 readme = "README.md"
@@ -32,16 +32,16 @@ classifiers = [
     "Topic :: Database",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-keywords = ["django", "geography", "iso3166", "countries", "cities", "states", "regions"]
+keywords = ["django", "documents", "document-manager", "files", "tags", "folders"]
 dependencies = [
     "Django>=3.2,<6.0"
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/django-iso-3166"
-Repository = "https://github.com/yourusername/django-iso-3166"
-"Bug Tracker" = "https://github.com/yourusername/django-iso-3166/issues"
-Documentation = "https://github.com/yourusername/django-iso-3166#readme"
+Homepage = "https://github.com/LorenzoSilvaMoore/django-document-manager"
+Repository = "https://github.com/LorenzoSilvaMoore/django-document-manager"
+"Bug Tracker" = "https://github.com/LorenzoSilvaMoore/django-document-manager/issues"
+Documentation = "https://github.com/LorenzoSilvaMoore/django-document-manager#readme"
 
 [project.optional-dependencies]
 dev = [

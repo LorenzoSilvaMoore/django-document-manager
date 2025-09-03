@@ -7,12 +7,12 @@ def read_readme():
         return f.read()
 
 setup(
-    name="django-iso-3166",
+    name="django-document-manager",
     version="0.1.3",
     packages=find_packages(),
     include_package_data=True,
     package_data={
-        'django_iso_3166': [
+        'django_document_manager': [
             'data/*.sql',
             'migrations/*.py',
         ],
@@ -21,17 +21,17 @@ setup(
         "Django>=3.2,<6.0"
     ],
     python_requires=">=3.8",
-    description="Django app for managing and bootstrapping ISO 3166 geographical data",
+    description="A lightweight Django app for managing documents, folders, tags and optional versioning.",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
     author="Lorenzo Silva",
     author_email="lorenzo.smb.rayo@gmail.com",
     license="MIT",
-    url="https://github.com/LorenzoSilvaMoore/django-iso-3166",
+    url="https://github.com/LorenzoSilvaMoore/django-document-manager",
     project_urls={
-        "Bug Tracker": "https://github.com/LorenzoSilvaMoore/django-iso-3166/issues",
-        "Documentation": "https://github.com/LorenzoSilvaMoore/django-iso-3166#readme",
-        "Source Code": "https://github.com/LorenzoSilvaMoore/django-iso-3166",
+        "Bug Tracker": "https://github.com/LorenzoSilvaMoore/django-document-manager/issues",
+        "Documentation": "https://github.com/LorenzoSilvaMoore/django-document-manager#readme",
+        "Source Code": "https://github.com/LorenzoSilvaMoore/django-document-manager",
     },
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -53,6 +53,6 @@ setup(
         "Topic :: Database",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    keywords="django geography iso3166 countries cities states regions",
+    keywords="django document manager",
     zip_safe=False,
 )
