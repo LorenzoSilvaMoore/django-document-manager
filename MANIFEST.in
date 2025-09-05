@@ -2,13 +2,12 @@ include README.md
 include LICENSE
 include CHANGELOG.md
 include .gitignore
-recursive-include django_iso_3166/data *.sql
-recursive-include django_iso_3166/models *.py
-recursive-include django_iso_3166/management/commands *.py
-recursive-include django_iso_3166/migrations *.py
-include django_iso_3166/__init__.py
-include django_iso_3166/apps.py
-include django_iso_3166/admin.py
+recursive-include django_document_manager/models *.py
+recursive-include django_document_manager/management/commands *.py
+recursive-include django_document_manager/migrations *.py
+include django_document_manager/__init__.py
+include django_document_manager/apps.py
+include django_document_manager/admin.py
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *~

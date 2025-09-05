@@ -44,7 +44,6 @@ class Command(BaseCommand):
         cutoff_date = timezone.now().date() - timedelta(days=days)
         expired_docs = Document.objects.filter(
             expiration_date__lt=cutoff_date,
-            is_active=True
         )
 
         if expired_docs.exists():
@@ -55,10 +54,7 @@ class Command(BaseCommand):
             
             if not dry_run:
                 # Soft delete expired documents
-                expired_docs.update(
-                    is_active=False,
-                    date_deleted=timezone.now()
-                )
+                expired_docs.delete()
                 self.stdout.write(
                     self.style.SUCCESS(f'Soft-deleted {count} expired documents')
                 )

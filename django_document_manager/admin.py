@@ -8,10 +8,10 @@ from .models import DocumentType, Document, DocumentVersion
 
 @admin.register(DocumentType)
 class DocumentTypeAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'max_file_size_mb', 'requires_validation', 'is_financial', 'is_active']
-    list_filter = ['requires_validation', 'is_financial', 'is_active']
+    list_display = ['name', 'code', 'max_file_size_mb', 'requires_validation', 'is_financial', 'is_selectable']
+    list_filter = ['requires_validation', 'is_financial', 'is_selectable']
     search_fields = ['name', 'code', 'description']
-    readonly_fields = ['date_created', 'date_modified']
+    readonly_fields = ['date_created', 'date_updated']
 
 
 class DocumentVersionInline(admin.TabularInline):
@@ -37,7 +37,7 @@ class DocumentAdmin(admin.ModelAdmin):
     ]
     search_fields = ['title', 'description', 'owner_uuid']
     readonly_fields = [
-        'owner_uuid', 'owner_model', 'date_created', 'date_modified',
+        'owner_uuid', 'owner_model', 'date_created', 'date_updated',
         'ai_extracted_data', 'ai_confidence_score'
     ]
     fieldsets = (
@@ -59,7 +59,7 @@ class DocumentAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
         ('Timestamps', {
-            'fields': ('date_created', 'date_modified'),
+            'fields': ('date_created', 'date_updated'),
             'classes': ('collapse',)
         })
     )
@@ -83,7 +83,7 @@ class DocumentVersionAdmin(admin.ModelAdmin):
     search_fields = ['document__title', 'file_original_name', 'file_hash']
     readonly_fields = [
         'version', 'file_size_bytes', 'file_hash', 'mime_type', 
-        'date_created', 'date_modified'
+        'date_created', 'date_updated'
     ]
     
     def file_size_display(self, obj):
