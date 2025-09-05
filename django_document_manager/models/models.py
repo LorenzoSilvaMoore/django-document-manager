@@ -55,7 +55,7 @@ class DocumentType(BaseCatalogModel):
         return f"DocumentType(name={self.name}, code={self.code})"
     
     class Meta:
-        db_table = 'document_type'
+        db_table = 'dm_document_type'
         verbose_name = _('document type')
         verbose_name_plural = _('document types')
 
@@ -130,7 +130,7 @@ class DocumentVersion(BaseModel):
     )
 
     class Meta:
-        db_table = 'document_version'
+        db_table = 'dm_document_version'
         verbose_name = _('document version')
         verbose_name_plural = _('document versions')
         ordering = ['document', '-version']
@@ -372,7 +372,7 @@ class Document(BaseModel):
         return f"Document(title={self.title}, type={self.document_type.code}, owner={self.owner_uuid})"
 
     class Meta:
-        db_table = 'document'
+        db_table = 'dm_document'
         verbose_name = _('document')
         verbose_name_plural = _('documents')
         indexes = [

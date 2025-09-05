@@ -18,6 +18,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Time-based query utilities leveraging uuid7 encoding
 - Atomic transactions for version management to prevent race conditions
 - Proper error handling for file operations
+- Initial database migration for Document, DocumentType, and DocumentVersion models
+- Management command `cleanup_documents` for automated maintenance of expired documents
+  - Supports dry-run mode to preview actions before execution
+  - Configurable expiration threshold (default: 30 days)
+  - Option to clean up temporary upload files
 
 ### Fixed
 
@@ -26,6 +31,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed package naming inconsistencies in setup files
 - Added missing database migration file
 - Improved file upload error handling
+- Database table names now use 'dm_' prefix for better namespace management
+  - `document` → `dm_document`
+  - `document_type` → `dm_document_type`  
+  - `document_version` → `dm_document_version`
 
 ### Changed
 
