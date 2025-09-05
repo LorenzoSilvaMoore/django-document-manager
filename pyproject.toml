@@ -35,7 +35,7 @@ classifiers = [
 keywords = ["django", "documents", "document-manager", "files"]
 dependencies = [
     "Django>=3.2,<6.0",
-    "uuid6>>=2025.0.0,<2026.0.0"
+    "uuid6>=2025.0.0,<2026.0.0"
 ]
 
 [project.urls]
