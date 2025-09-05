@@ -5,9 +5,9 @@ A simple, light, and robust document manager for Django projects. This app provi
 ## Features
 
 - Lightweight Django app providing document storage and metadata.
-- Models: `Document`, `Folder`, `Tag`, `DocumentVersion` (optional version history).
+- Models: `Document`, `DocumentType`, `DocumentVersion` (version history).
 - Pluggable storage backends (Django's default storage or custom backends).
-- Basic full-text metadata search and filtering by tags/folders.
+- uuid7-based primary keys for optimal database performance and time-ordered queries.
 - Optional file versioning and soft-delete support.
 - Admin integration and a small, testable API for programmatic access.
 
@@ -53,19 +53,21 @@ doc.save()
 Simple query examples:
 
 ```python
-# All documents in a folder
-docs = Document.objects.filter(folder__slug='reports')
+# Recent documents for an owner (leverages uuid7 time ordering)
+recent_docs = Document.get_recent_documents(owner_uuid, limit=5)
 
-# Search by tag
-docs = Document.objects.filter(tags__name='finance')
+# Documents created in last 7 days (efficient uuid7 range query)
+week_docs = Document.get_documents_since(owner_uuid, days_ago=7)
 ```
 
 ## Models (overview)
 
-- Document: title, description, uploaded file, uploaded_by, created/modified timestamps, folder, tags, is_active (soft delete).
-- Folder: hierarchical grouping for documents (optional parent relationship).
-- Tag: simple tagging model with many-to-many to Document.
-- DocumentVersion: stores historical versions of document files and metadata (enabled optionally).
+- **Document**: title, description, uploaded file, validation status, access control, AI processing fields, timestamps, owner relationship.
+- **DocumentType**: catalog of document types with validation rules and file size limits.
+- **DocumentVersion**: stores historical versions of document files and metadata.
+- **BaseDocumentOwnerModel**: abstract base for entities that can own documents.
+
+All models use uuid7 primary keys for optimal database performance and natural time ordering.
 
 See the code under `django_document_manager/models/` for full field details.
 

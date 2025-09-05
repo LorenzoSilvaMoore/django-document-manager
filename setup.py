@@ -8,7 +8,7 @@ def read_readme():
 
 setup(
     name="django-document-manager",
-    version="0.1.3",
+    version="0.1.4",
     packages=find_packages(),
     include_package_data=True,
     package_data={
@@ -18,7 +18,7 @@ setup(
     },
     install_requires=[
         "Django>=3.2,<6.0",
-        "uuid7>=0.1,<1.0",
+        "uuid6>=2025.0.0,<2026.0.0",
     ],
     python_requires=">=3.8",
     description="A lightweight Django app for managing documents, folders, tags and optional versioning.",

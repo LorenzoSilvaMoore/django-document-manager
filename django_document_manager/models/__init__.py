@@ -1,7 +1,3 @@
-from .city import City
-from .country import Country
-from .region import Region
-from .state import State
-from .subregion import Subregion
+from .models import DocumentType, Document, DocumentVersion, BaseDocumentOwnerModel
 
-__all__ = ['City', 'Country', 'Region', 'State', 'Subregion']
+__all__ = ['DocumentType', 'Document', 'DocumentVersion', 'BaseDocumentOwnerModel']

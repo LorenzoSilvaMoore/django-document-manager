@@ -2,7 +2,7 @@
 
 """
 This package provides models and management commands for handling document management
-related to documents, folders, tags, and optional versioning.
+with document types, versioning, validation, and owner relationships.
 """
 
-__version__ = '0.1.0'
+__version__ = '0.1.4'
