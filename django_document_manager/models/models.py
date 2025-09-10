@@ -13,14 +13,22 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 try:
-    from django_crud_audit.models import BaseModel, BaseCatalogModel
+    from django_crud_audit.models import BaseModel
 except (ImportError, ModuleNotFoundError):
-    raise ImportError("BaseModel and BaseCatalogModel must be available from django_crud_audit.")
+    raise ImportError("BaseModel must be available from django_crud_audit.")
+
+try:
+    from django_catalogs.models import BaseCatalogModel
+except (ImportError, ModuleNotFoundError):
+    raise ImportError("BaseCatalogModel must be available from django_catalogs.")
 
 try:
     import uuid6
 except (ImportError, ModuleNotFoundError):
     raise ImportError("uuid7 package must be available for uuid7 support.")
+
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -406,6 +414,9 @@ class Document(BaseModel):
         """
         Set the current version of the document.
         """
+        if version.document_id != self.id:
+            raise ValidationError("Version does not belong to this document")
+        
         current = self.current_version
         if current:
             current.is_current = False

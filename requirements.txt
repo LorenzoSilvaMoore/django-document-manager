@@ -2,3 +2,6 @@ django>=5.2,<6.0
 uuid6>=2025.0,<2026.0
 
 git+https://github.com/LorenzoSilvaMoore/django-crud-audit.git@main#egg=django-crud-audit
+
+git+https://github.com/LorenzoSilvaMoore/django-catalogs.git@main#egg=django-catalogs
+

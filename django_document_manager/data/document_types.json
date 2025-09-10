@@ -1,0 +1,104 @@
+{
+  "document_types": {
+    "default": "other",
+    "other": {
+      "name": "Other Document",
+      "code": "other",
+      "description": "General purpose document type",
+      "description_hint": "Any document that doesn't fit other categories",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".doc", ".docx", ".txt"],
+      "max_file_size_mb": 10,
+      "requires_validation": false,
+      "is_financial": false
+    },
+    "financial": {
+      "name": "Financial Statement",
+      "code": "financial",
+      "description": "Company financial statements and reports",
+      "description_hint": "P&L, Balance Sheet, Cash Flow statements",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".xlsx", ".xls", ".csv"],
+      "max_file_size_mb": 25,
+      "requires_validation": true,
+      "is_financial": true
+    },
+    "tax": {
+      "name": "Tax Document",
+      "code": "tax",
+      "description": "Tax returns and related tax documents",
+      "description_hint": "Tax returns, 1099s, W2s, etc.",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".xlsx", ".xls"],
+      "max_file_size_mb": 15,
+      "requires_validation": true,
+      "is_financial": true
+    },
+    "legal": {
+      "name": "Legal Document",
+      "code": "legal",
+      "description": "Legal contracts, agreements, and certifications",
+      "description_hint": "Operating agreements, contracts, licenses",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".doc", ".docx"],
+      "max_file_size_mb": 20,
+      "requires_validation": true,
+      "is_financial": false
+    },
+    "business_plan": {
+      "name": "Business Plan",
+      "code": "busnesspln",
+      "description": "Business plans and strategic documents",
+      "description_hint": "Business plan, pitch deck, market analysis",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".ppt", ".pptx", ".doc", ".docx"],
+      "max_file_size_mb": 50,
+      "requires_validation": false,
+      "is_financial": false
+    },
+    "pitch_deck": {
+      "name": "Pitch Deck",
+      "code": "pitch_deck",
+      "description": "Investor pitch presentations",
+      "description_hint": "Slides for investor presentations",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".ppt", ".pptx"],
+      "max_file_size_mb": 30,
+      "requires_validation": false,
+      "is_financial": false
+    },
+    "bank_statement": {
+      "name": "Bank Statement",
+      "code": "bankstmnt",
+      "description": "Bank account statements",
+      "description_hint": "Monthly bank statements",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".csv", ".xlsx"],
+      "max_file_size_mb": 10,
+      "requires_validation": true,
+      "is_financial": true
+    },
+    "certificate": {
+      "name": "Certificate",
+      "code": "certfcate",
+      "description": "Business certificates and registrations",
+      "description_hint": "Articles of incorporation, EIN letter, etc.",
+      "is_selectable": true,
+      "file_extensions": [".pdf", ".jpg", ".jpeg", ".png"],
+      "max_file_size_mb": 10,
+      "requires_validation": false,
+      "is_financial": false
+    },
+    "questionnaire_answer": {
+      "name": "Questionnaire Answer Document",
+      "code": "qst_answer",
+      "description": "Documents uploaded as answers to questionnaire questions",
+      "description_hint": "Supporting documents for questionnaire responses",
+      "is_selectable": false,
+      "file_extensions": [".pdf", ".doc", ".docx", ".xlsx", ".xls", ".csv", ".txt", ".jpg", ".jpeg", ".png"],
+      "max_file_size_mb": 25,
+      "requires_validation": false,
+      "is_financial": false
+    }
+  }
+}
