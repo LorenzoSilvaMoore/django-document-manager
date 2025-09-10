@@ -7,6 +7,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-09-09
+
+### Added
+
+- **Comprehensive Documentation**: Complete rewrite of README.md with detailed usage examples, API reference, and configuration guide
+- **Missing Dependencies**: Added `django-crud-audit>=0.2.0` and `django-catalogs>=0.2.0` to package dependencies in setup.py and pyproject.toml
+- **Enhanced Package Data**: Include `data/*.json` files (document type catalog data) in package distribution
+- **Development Status**: Upgraded from Alpha to Beta status reflecting the maturity of the codebase
+
+### Changed
+
+- **Package Description**: Updated descriptions in setup.py and pyproject.toml to better reflect the comprehensive nature of the package
+- **Version Consistency**: Aligned version numbers across all package files (__init__.py, setup.py, pyproject.toml)
+- **Keywords Enhancement**: Added more relevant keywords including "versioning" and "validation" for better discoverability
+
+### Documentation
+
+- **Complete API Reference**: Detailed documentation of all models, methods, and their usage patterns
+- **Advanced Examples**: Comprehensive code examples showing document creation, versioning, validation workflows, and time-based queries
+- **Configuration Guide**: Complete settings reference with optional configuration options
+- **Performance Notes**: Documentation of UUID7 optimization benefits and query performance characteristics
+- **Database Design**: Detailed explanation of table structure, indexes, and constraints
+- **Management Commands**: Full documentation of the cleanup_documents command with all options
+
+### Technical Improvements
+
+- **Dependency Management**: Properly declared all required dependencies for production use
+- **Package Distribution**: Ensured all necessary data files are included in the package build
+- **Development Workflow**: Enhanced package metadata for better development experience
+
+### Fixed
+
+- **Missing Dependencies**: Resolved import errors by properly declaring django-crud-audit and django-catalogs dependencies
+- **Package Data**: Fixed missing document_types.json data file in package distribution
+
 ## [0.1.4] - 2025-09-04
 
 ### Added

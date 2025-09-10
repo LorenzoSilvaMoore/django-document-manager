@@ -5,6 +5,7 @@ include .gitignore
 recursive-include django_document_manager/models *.py
 recursive-include django_document_manager/management/commands *.py
 recursive-include django_document_manager/migrations *.py
+recursive-include django_document_manager/data *.json
 include django_document_manager/__init__.py
 include django_document_manager/apps.py
 include django_document_manager/admin.py

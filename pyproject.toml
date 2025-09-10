@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-document-manager"
-version = "0.1.4"
-description = "A lightweight Django app for managing documents and versioning for files."
+version = "0.1.5"
+description = "A comprehensive Django app for document management with versioning, validation, and AI processing."
 authors = [
     {name = "Lorenzo Silva", email = "lorenzo.smb.rayo@gmail.com"}
 ]
@@ -13,7 +13,7 @@ license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -32,10 +32,12 @@ classifiers = [
     "Topic :: Database",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-keywords = ["django", "documents", "document-manager", "files"]
+keywords = ["django", "documents", "document-manager", "files", "versioning", "validation"]
 dependencies = [
     "Django>=3.2,<6.0",
-    "uuid6>=2025.0.0,<2026.0.0"
+    "uuid6>=2025.0.0,<2026.0.0",
+    "django-crud-audit>=0.2.0",
+    "django-catalogs>=0.2.0",
 ]
 
 [project.urls]
@@ -62,4 +64,4 @@ packages = ["django_document_manager"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-django_document_manager = ["migrations/*.py"]
+django_document_manager = ["migrations/*.py", "data/*.json"]
