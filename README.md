@@ -27,16 +27,42 @@ A comprehensive, robust document management system for Django applications. This
 
 ## Installation
 
+### Step 1: Install Private Dependencies
+
+This package depends on private GitHub repositories. Install these first:
+
+```bash
+# Install private dependencies with authentication
+pip install git+https://github.com/LorenzoSilvaMoore/django-crud-audit.git@main
+pip install git+https://github.com/LorenzoSilvaMoore/django-catalogs.git@main
+
+# Or use the provided requirements file (requires GitHub PAT tokens)
+pip install -r requirements-private.txt
+```
+
+### Step 2: Install Django Document Manager
+
 Install from PyPI:
 
 ```bash
 pip install django-document-manager
 ```
 
-The package requires these dependencies (automatically installed):
-- `django-crud-audit>=0.2.0` - For audit trails and soft delete
-- `django-catalogs>=0.2.0` - For document type catalog management  
+Or install from source:
+
+```bash
+pip install git+https://github.com/LorenzoSilvaMoore/django-document-manager.git@main
+```
+
+### Required Dependencies
+
+The package automatically installs these public dependencies:
+- `Django>=3.2,<6.0` - Django framework
 - `uuid6>=2025.0.0` - For UUID7 support
+
+The private dependencies (must be installed separately):
+- `django-crud-audit>=0.2.0` - For audit trails and soft delete
+- `django-catalogs>=0.2.0` - For document type catalog management
 
 Add to your Django `INSTALLED_APPS`:
 
@@ -725,12 +751,26 @@ for doc in expired:
 
 ### Common Issues
 
+**Private Dependency Installation:**
+```bash
+# If you get "repository not found" errors, install private dependencies first:
+pip install git+https://github.com/LorenzoSilvaMoore/django-crud-audit.git@main
+pip install git+https://github.com/LorenzoSilvaMoore/django-catalogs.git@main
+
+# Then install django-document-manager
+pip install django-document-manager
+
+# Alternative: Use personal access tokens in requirements-private.txt
+# Replace 'your_github_pat_here' with your actual GitHub PAT
+```
+
 **Import Errors:**
 ```python
-# Ensure dependencies are properly installed
-pip install django-crud-audit>=0.2.0 django-catalogs>=0.2.0
+# Ensure dependencies are properly installed and in correct order
+pip install django-crud-audit django-catalogs  # Private deps first
+pip install django-document-manager            # Then this package
 
-# Verify INSTALLED_APPS order
+# Verify INSTALLED_APPS order in settings.py
 INSTALLED_APPS = [
     # ... other apps
     'django_crud_audit',      # Must come before document manager

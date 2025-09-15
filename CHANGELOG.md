@@ -7,6 +7,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-09-15
+
+### Fixed
+
+- **Private Dependency Installation**: Resolved pip installation issues with private GitHub repositories
+  - Removed private dependencies (`django-crud-audit`, `django-catalogs`) from automatic installation requirements
+  - Created separate `requirements-private.txt` for private dependencies
+  - Added comprehensive installation documentation in `INSTALL_PRIVATE_DEPS.md`
+  - Updated README.md with step-by-step installation instructions for private dependencies
+
+### Added
+
+- **Installation Documentation**: 
+  - `requirements-private.txt` - Separate requirements file for private GitHub dependencies
+  - `INSTALL_PRIVATE_DEPS.md` - Comprehensive installation guide for private dependencies
+  - Enhanced troubleshooting section in README.md
+
+### Changed
+
+- **Package Dependencies**: Private dependencies must now be installed manually before installing django-document-manager
+- **Installation Process**: Two-step installation process (private deps first, then public package)
+
+### Technical Details
+
+This change resolves the circular dependency issue where pip fails to resolve private GitHub repositories during automatic dependency installation. Users must now:
+
+1. Install private dependencies first with proper GitHub authentication
+2. Install django-document-manager (which will install public dependencies)
+3. Configure Django settings in the correct order
+
 ## [0.1.5] - 2025-09-09
 
 ### Added

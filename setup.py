@@ -8,7 +8,7 @@ def read_readme():
 
 setup(
     name="django-document-manager",
-    version="0.1.5",
+    version="0.1.6",
     packages=find_packages(),
     include_package_data=True,
     package_data={
@@ -20,8 +20,8 @@ setup(
     install_requires=[
         "Django>=3.2,<6.0",
         "uuid6>=2025.0.0,<2026.0.0",
-        "django-crud-audit>=0.2.0",
-        "django-catalogs>=0.2.0",
+        # Note: django-crud-audit and django-catalogs are private dependencies
+        # Install separately: pip install -r requirements-private.txt
     ],
     python_requires=">=3.8",
     description="A comprehensive Django app for document management with versioning, validation, and AI processing.",

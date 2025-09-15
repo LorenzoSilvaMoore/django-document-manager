@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-document-manager"
-version = "0.1.5"
+version = "0.1.6"
 description = "A comprehensive Django app for document management with versioning, validation, and AI processing."
 authors = [
     {name = "Lorenzo Silva", email = "lorenzo.smb.rayo@gmail.com"}
@@ -36,8 +36,8 @@ keywords = ["django", "documents", "document-manager", "files", "versioning", "v
 dependencies = [
     "Django>=3.2,<6.0",
     "uuid6>=2025.0.0,<2026.0.0",
-    "django-crud-audit>=0.2.0",
-    "django-catalogs>=0.2.0",
+    # Note: django-crud-audit and django-catalogs are private dependencies
+    # Install separately: pip install -r requirements-private.txt
 ]
 
 [project.urls]
