@@ -7,6 +7,48 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-09-15
+
+### Fixed
+
+- **Circular Dependency Issues**: Resolved Django migration circular dependency errors when user models and BaseDocumentOwnerModel are in the same app
+  - Split initial migration into two parts: base models (0001) and user relationships (0002)
+  - Created `migrate_document_manager` management command for handling circular dependencies
+  - Improved `BaseDocumentOwnerModel` with runtime imports to avoid circular imports
+
+### Added
+
+- **Migration Management**:
+  - `migrate_document_manager` command with options for skipping user dependencies
+  - Automatic circular dependency detection and handling
+  - Dry-run support for testing migration strategies
+  - `CIRCULAR_DEPENDENCY_GUIDE.md` - Comprehensive guide for handling circular dependencies
+
+- **Enhanced BaseDocumentOwnerModel**:
+  - `get_documents_by_type()` method for filtering documents by type
+  - `get_recent_documents()` method using UUID7 optimization
+  - `get_owners_with_documents()` class method for finding owners with documents
+  - Runtime imports to prevent circular import issues
+
+### Changed
+
+- **Migration Structure**: Split migrations to avoid direct AUTH_USER_MODEL dependencies in initial migration
+- **Model Methods**: Enhanced BaseDocumentOwnerModel with additional utility methods and better circular import handling
+- **Documentation**: Added troubleshooting section for circular dependencies in README.md
+
+### Technical Details
+
+This release addresses the common Django issue where circular dependency errors occur when:
+1. User models and BaseDocumentOwnerModel subclasses are in the same app
+2. Both depend on AUTH_USER_MODEL in their migrations
+3. Django's migration system detects a circular dependency
+
+The solution provides multiple approaches:
+1. Staged migrations (recommended)
+2. Separate apps for document owners (best practice)
+3. Manual migration dependency management
+4. Recovery strategies for existing circular dependencies
+
 ## [0.1.6] - 2025-09-15
 
 ### Fixed

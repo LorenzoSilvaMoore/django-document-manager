@@ -569,7 +569,10 @@ class Document(BaseModel):
 
 class BaseDocumentOwnerModel(BaseModel):
     """
-    Abstract base model for entities that can own documents
+    Abstract base model for entities that can own documents.
+    
+    This model provides a UUID field for document ownership without creating
+    circular dependencies with the main Document model.
     """
     document_owner_uuid = models.UUIDField(
         default=uuid6.uuid7,
@@ -580,20 +583,72 @@ class BaseDocumentOwnerModel(BaseModel):
 
     class Meta:
         abstract = True
+        # Add index for document ownership queries
+        indexes = [
+            models.Index(fields=['document_owner_uuid'], name='idx_%(class)s_owner_uuid'),
+        ]
 
     def __str__(self):
         return f"{self._meta.verbose_name} ({self.document_owner_uuid})"
 
     def get_display_name(self):
         """
-        Return a display name for the owner entity
+        Return a display name for the owner entity.
+        Override this method in your concrete models.
         """
         return str(self)
 
     def get_documents(self):
         """
-        Return queryset of documents owned by this entity
+        Return queryset of documents owned by this entity.
+        
+        Note: This method imports Document at runtime to avoid circular imports.
         """
+        # Import here to avoid circular dependency issues
+        from .models import Document
         return Document.objects.filter(
             owner_uuid=self.document_owner_uuid
         )
+    
+    def get_documents_by_type(self, document_type_code):
+        """
+        Get documents of a specific type owned by this entity.
+        
+        Args:
+            document_type_code (str): Code of the document type
+            
+        Returns:
+            QuerySet: Documents of the specified type
+        """
+        # Import here to avoid circular dependency issues  
+        from .models import Document
+        return self.get_documents().filter(
+            document_type__code=document_type_code
+        )
+    
+    def get_recent_documents(self, limit=10):
+        """
+        Get most recent documents owned by this entity.
+        Uses UUID7 time ordering for efficient queries.
+        
+        Args:
+            limit (int): Maximum number of documents to return
+            
+        Returns:
+            QuerySet: Most recent documents
+        """
+        return self.get_documents().order_by('-id')[:limit]
+    
+    @classmethod
+    def get_owners_with_documents(cls):
+        """
+        Get all owners that have at least one document.
+        
+        Returns:
+            QuerySet: Owner instances that have documents
+        """
+        # Import here to avoid circular dependency issues
+        from .models import Document
+        
+        owner_uuids = Document.objects.values_list('owner_uuid', flat=True).distinct()
+        return cls.objects.filter(document_owner_uuid__in=owner_uuids)

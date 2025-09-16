@@ -382,6 +382,21 @@ python manage.py cleanup_documents --days 60
 python manage.py cleanup_documents --cleanup-temp
 ```
 
+### Migration Management
+
+Handle circular dependencies during migration:
+
+```bash
+# Check for circular dependencies and migrate accordingly
+python manage.py migrate_document_manager
+
+# Skip user foreign keys to avoid circular dependencies
+python manage.py migrate_document_manager --skip-user-deps
+
+# Check specific app for circular dependencies
+python manage.py migrate_document_manager --app myapp --dry-run
+```
+
 ## Database Design
 
 The package uses an optimized database design with careful attention to performance and data integrity:
@@ -750,6 +765,21 @@ for doc in expired:
 ## Troubleshooting
 
 ### Common Issues
+
+**Circular Dependency Errors:**
+```bash
+# If you get CircularDependencyError during migration:
+django.db.migrations.exceptions.CircularDependencyError: myapp.0001_initial, django_document_manager.0001_initial
+
+# Solution 1: Use staged migration (recommended)
+python manage.py migrate_document_manager --skip-user-deps
+python manage.py makemigrations myapp
+python manage.py migrate myapp
+python manage.py migrate django_document_manager 0002
+
+# Solution 2: Separate document owners into different app (best practice)
+# See CIRCULAR_DEPENDENCY_GUIDE.md for detailed solutions
+```
 
 **Private Dependency Installation:**
 ```bash
