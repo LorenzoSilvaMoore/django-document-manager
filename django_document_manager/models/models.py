@@ -574,23 +574,76 @@ class BaseDocumentOwnerModel(BaseModel):
     
     This model provides a UUID field for document ownership without creating
     circular dependencies with the main Document model.
+    
+    Migration-Safe Design:
+    - No callable defaults to avoid Django migration issues
+    - null=True allows existing records to work seamlessly
+    - unique=True ensures data integrity
+    - UUIDs are generated in save() method for new instances
+    - Use populate_document_owner_uuids management command for existing data
     """
     document_owner_uuid = models.UUIDField(
-        default=_generate_uuid7,
+        null=True,  # Allows existing records to work seamlessly
+        blank=True,  # Allows forms to work properly
         editable=False,
-        unique=True,
+        db_index=True, 
         help_text=_("Unique identifier for the document owner entity")
     )
 
     class Meta:
         abstract = True
-        # Add index for document ownership queries
-        indexes = [
-            models.Index(fields=['document_owner_uuid'], name='idx_%(class)s_owner_uuid'),
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=['document_owner_uuid'],
+                name='u_doc_%(app_label)s_%(class)s_uuid',
+                condition=models.Q(document_owner_uuid__isnull=False)
+            )
         ]
 
     def __str__(self):
-        return f"{self._meta.verbose_name} ({self.document_owner_uuid})"
+        uuid_display = str(self.document_owner_uuid) if self.document_owner_uuid else "No UUID"
+        return f"{self._meta.verbose_name} ({uuid_display})"
+    
+    def save(self, *args, **kwargs):
+        """
+        Generate document_owner_uuid if it doesn't exist.
+        This handles both new instances and existing instances that don't have UUIDs yet.
+        """
+        if not self.document_owner_uuid:
+            # Generate UUID7 for new instances or existing instances without UUIDs
+            self.document_owner_uuid = _generate_uuid7()
+            
+            # For extra safety, ensure uniqueness in case of race conditions
+            max_attempts = 10
+            attempt = 0
+            
+            while attempt < max_attempts:
+                try:
+                    # Check if this UUID already exists for this model
+                    if self.__class__.objects.filter(
+                        document_owner_uuid=self.document_owner_uuid
+                    ).exclude(pk=self.pk).exists():
+                        # Generate a new UUID and try again
+                        self.document_owner_uuid = _generate_uuid7()
+                        attempt += 1
+                        continue
+                    else:
+                        # UUID is unique, break out of loop
+                        break
+                except Exception as e:
+                    logger.warning(f"Error checking UUID uniqueness: {e}")
+                    # Generate new UUID and try again
+                    self.document_owner_uuid = _generate_uuid7()
+                    attempt += 1
+            
+            if attempt >= max_attempts:
+                logger.error(f"Could not generate unique document_owner_uuid after {max_attempts} attempts")
+                raise ValidationError(
+                    _("Unable to generate unique document owner UUID. Please try again.")
+                )
+        
+        super().save(*args, **kwargs)
 
     def get_display_name(self):
         """
@@ -599,12 +652,32 @@ class BaseDocumentOwnerModel(BaseModel):
         """
         return str(self)
 
+    def get_or_create_document_owner_uuid(self):
+        """
+        Ensure this instance has a document_owner_uuid.
+        This method is useful for existing instances that might not have UUIDs yet.
+        
+        Returns:
+            UUID: The document_owner_uuid for this instance
+        """
+        if not self.document_owner_uuid:
+            self.document_owner_uuid = _generate_uuid7()
+            # Save only the UUID field to avoid triggering other save logic
+            self.save(update_fields=['document_owner_uuid'])
+        return self.document_owner_uuid
+
     def get_documents(self):
         """
         Return queryset of documents owned by this entity.
         
         Note: This method imports Document at runtime to avoid circular imports.
+        For instances without UUIDs, returns empty queryset.
         """
+        if not self.document_owner_uuid:
+            # Return empty queryset for instances without UUIDs
+            from .models import Document
+            return Document.objects.none()
+            
         # Import here to avoid circular dependency issues
         from .models import Document
         return Document.objects.filter(
@@ -621,6 +694,11 @@ class BaseDocumentOwnerModel(BaseModel):
         Returns:
             QuerySet: Documents of the specified type
         """
+        if not self.document_owner_uuid:
+            # Return empty queryset for instances without UUIDs
+            from .models import Document
+            return Document.objects.none()
+            
         # Import here to avoid circular dependency issues  
         from .models import Document
         return self.get_documents().filter(
@@ -638,12 +716,18 @@ class BaseDocumentOwnerModel(BaseModel):
         Returns:
             QuerySet: Most recent documents
         """
+        if not self.document_owner_uuid:
+            # Return empty queryset for instances without UUIDs
+            from .models import Document
+            return Document.objects.none()
+            
         return self.get_documents().order_by('-id')[:limit]
     
     @classmethod
     def get_owners_with_documents(cls):
         """
         Get all owners that have at least one document.
+        Only includes owners with valid UUIDs.
         
         Returns:
             QuerySet: Owner instances that have documents
@@ -652,4 +736,8 @@ class BaseDocumentOwnerModel(BaseModel):
         from .models import Document
         
         owner_uuids = Document.objects.values_list('owner_uuid', flat=True).distinct()
-        return cls.objects.filter(document_owner_uuid__in=owner_uuids)
+        # Filter out None UUIDs and ensure our instances have UUIDs too
+        return cls.objects.filter(
+            document_owner_uuid__in=owner_uuids,
+            document_owner_uuid__isnull=False
+        )
