@@ -28,7 +28,8 @@ except (ImportError, ModuleNotFoundError):
     raise ImportError("uuid7 package must be available for uuid7 support.")
 
 
-
+def _generate_uuid7():
+    return uuid6.uuid7()
 
 logger = logging.getLogger(__name__)
 
@@ -260,8 +261,7 @@ class Document(BaseModel):
 
     # Ownership and Relationships
     owner_uuid = models.UUIDField(
-        editable=False,
-        default=uuid6.uuid7, 
+        editable=False, 
         help_text=_("Unique identifier for the document owner")
     )
     owner_model = models.CharField(
@@ -576,7 +576,7 @@ class BaseDocumentOwnerModel(BaseModel):
     circular dependencies with the main Document model.
     """
     document_owner_uuid = models.UUIDField(
-        default=uuid6.uuid7,
+        default=_generate_uuid7,
         editable=False,
         unique=True,
         help_text=_("Unique identifier for the document owner entity")
