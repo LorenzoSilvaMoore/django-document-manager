@@ -8,7 +8,7 @@ def read_readme():
 
 setup(
     name="django-document-manager",
-    version="0.1.7",
+    version="0.1.7b0",
     packages=find_packages(),
     include_package_data=True,
     package_data={

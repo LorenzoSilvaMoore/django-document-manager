@@ -261,6 +261,7 @@ class Document(BaseModel):
     # Ownership and Relationships
     owner_uuid = models.UUIDField(
         editable=False,
+        default=uuid6.uuid7, 
         help_text=_("Unique identifier for the document owner")
     )
     owner_model = models.CharField(
