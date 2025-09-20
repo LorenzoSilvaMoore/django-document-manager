@@ -98,10 +98,23 @@ from django_document_manager.models import BaseDocumentOwnerModel
 
 class Company(BaseDocumentOwnerModel):
     name = models.CharField(max_length=200)
+    email = models.EmailField()
     
     def get_display_name(self):
-        return self.name
+        return f"{self.name} ({self.email})"
+
+# For existing models, simply add the inheritance:
+class ExistingUser(User, BaseDocumentOwnerModel):
+    # Your existing fields...
+    pass
 ```
+
+**Migration-Safe Design**: The `BaseDocumentOwnerModel` is designed to be added to existing models without breaking migrations. When you inherit from it:
+
+1. Run `python manage.py makemigrations` - creates standard migration
+2. Run `python manage.py migrate` - applies changes safely  
+3. Run `python manage.py populate_document_owner_uuids` - populates UUIDs for existing instances
+4. Done! All instances now have document ownership capability
 
 ### 2. Create and Upload Documents
 
@@ -245,9 +258,29 @@ financial_docs.update(access_level='restricted', is_confidential=True)
 The core document model with comprehensive metadata and validation workflows:
 
 **Core Fields:**
-- **Ownership**: `owner_uuid`, `owner_model` - Generic foreign key to any owner model
+- **Ownership**: Uses Django's ContentType framework for robust model identification
+  - `owner_content_type` - ContentType reference to owner model class
+  - `owner_uuid` - UUID of the specific owner instance
+  - `owner` - Cached property for direct owner instance access
 - **Classification**: `document_type` - Link to DocumentType catalog
 - **Metadata**: `title`, `description`, `expiration_date`
+
+**ContentType-Based Ownership** (New in v0.2.0):
+The ownership system uses Django's ContentType framework for migration-safe model identification:
+
+```python
+# Access owner directly
+document = Document.objects.get(pk=1)
+owner_instance = document.owner  # Returns the actual owner object
+
+# Set owner with automatic ContentType detection  
+document.set_owner(some_company)  # Handles ContentType automatically
+
+# Query documents by owner type
+from django.contrib.contenttypes.models import ContentType
+company_ct = ContentType.objects.get_for_model(Company)
+company_docs = Document.objects.filter(owner_content_type=company_ct)
+```
 
 **Validation Workflow:**
 - **`validation_status`** - Tracks document validation state:

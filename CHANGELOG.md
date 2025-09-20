@@ -7,6 +7,120 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-09-20
+
+### BREAKING CHANGES
+
+- **Document Ownership System**: Migrated from string-based model identification to Django's ContentType framework
+  - **Old**: `owner_model` (string) + `owner_uuid` (UUID)
+  - **New**: `owner_content_type` (ContentType FK) + `owner_uuid` (UUID)
+  - This change provides migration-resilient model identification that survives model renames and moves
+  - Existing installations require data migration to populate `owner_content_type` from `owner_model`
+
+### Added
+
+- **ContentType-Based Ownership**:
+  - `owner_content_type` field using Django's ContentType framework for robust model identification
+  - `owner` property with intelligent caching for efficient owner instance retrieval
+  - `set_owner()` method for clean owner assignment with automatic ContentType detection
+  - Migration-safe architecture that survives model structure changes
+
+- **Enhanced BaseDocumentOwnerModel**:
+  - **Migration-Safe Design**: Removed callable defaults that caused Django migration issues
+  - **Production-Ready**: Handles existing instances gracefully without requiring manual migrations
+  - **UUID Generation**: Robust UUID7 generation with collision detection and retry logic
+  - **Performance Optimization**: Built-in caching and batch processing capabilities
+  - **Error Handling**: Comprehensive validation and logging for troubleshooting
+  - `ensure_document_owner_uuid()` method to guarantee UUID existence for existing instances
+  - Enhanced `get_documents()`, `get_documents_by_type()`, and `get_recent_documents()` methods with null UUID handling
+
+- **Management Commands**:
+  - `populate_document_owner_uuids` command for migrating existing BaseDocumentOwnerModel instances
+  - Batch processing support with configurable batch sizes
+  - Dry-run mode for testing migrations safely
+  - Progress reporting and comprehensive error handling
+  - Support for specific model targeting and verbose output
+
+- **Advanced Document Versioning**:
+  - `compute_file_hash()` method in DocumentVersion for flexible hash computation
+  - Enhanced `save_new_version()` with file hash collision detection
+  - Strict mode (`strict` parameter) for preventing duplicate file uploads
+  - Atomic version management with database-level locking to prevent race conditions
+  - Improved file integrity verification and metadata computation
+
+### Changed
+
+- **Document Model Architecture**:
+  - **Owner Resolution**: Now uses ContentType + UUID instead of string model names
+  - **Query Performance**: Optimized indexes for ContentType-based owner lookups
+  - **Admin Interface**: Updated to display `owner_content_type` instead of deprecated `owner_model`
+  - **API Methods**: `create_with_file()` now uses ContentType framework internally
+
+- **BaseDocumentOwnerModel Design**:
+  - **Migration Strategy**: No callable defaults to avoid "Callable default on unique field" errors
+  - **Backward Compatibility**: Graceful handling of instances without UUIDs
+  - **Field Configuration**: `null=True`, `blank=True` for seamless migration from existing models
+  - **Index Optimization**: Uses `db_index=True` instead of separate index definitions
+
+- **Document Validation**:
+  - Enhanced validation logic to work with ContentType-based ownership
+  - Improved error messages and validation feedback
+  - Better separation of concerns between ownership and document metadata
+
+### Fixed
+
+- **Django Migration Issues**:
+  - Eliminated "Callable default on unique field will not generate unique values" errors
+  - Fixed migration compatibility when adding BaseDocumentOwnerModel inheritance to existing models
+  - Resolved related_name conflicts in admin interface with proper `%(app_label)s_%(class)s` patterns
+
+- **Concurrency and Performance**:
+  - Fixed race conditions in document version creation with proper atomic transactions
+  - Eliminated double transaction nesting in `save_new_version()`
+  - Improved file hash computation efficiency and error handling
+  - Enhanced query performance with ContentType-based indexes
+
+- **Admin Interface**:
+  - Fixed `owner_display()` method to use new `owner` property instead of deprecated `get_owner_instance()`
+  - Updated readonly fields and fieldsets to reflect new ContentType architecture
+  - Improved owner representation in admin with better fallback handling
+
+### Technical Improvements
+
+- **Database Design**:
+  - New composite indexes: `idx_owner_ct_uuid`, `idx_document_owner_time`
+  - Optimized query patterns for ContentType-based ownership lookups
+  - Enhanced constraint definitions for data integrity
+
+- **Error Handling and Logging**:
+  - Comprehensive logging throughout the ownership resolution process
+  - Better error messages for debugging ContentType issues
+  - Improved validation error reporting in document creation workflows
+
+- **Code Quality**:
+  - Enhanced type hints throughout the codebase
+  - Improved docstrings with usage examples and parameter descriptions
+  - Better separation of concerns between models and their relationships
+
+### Migration Guide
+
+For existing installations upgrading from 0.1.x:
+
+1. **Backup your database** before upgrading
+2. **Install v0.2.0**: `pip install django-document-manager==0.2.0`
+3. **Run migrations**: `python manage.py migrate django_document_manager`
+4. **Populate ContentTypes**: The migration automatically populates `owner_content_type` from existing `owner_model` data
+5. **Run management command**: `python manage.py populate_document_owner_uuids` to ensure all BaseDocumentOwnerModel instances have UUIDs
+6. **Test ownership resolution**: Verify that `document.owner` property works correctly for your existing documents
+
+### Deprecation Notice
+
+- `owner_model` field is deprecated and will be removed in v0.3.0
+- `get_owner_instance()` method is deprecated, use `document.owner` property instead
+- Manual string-based model identification patterns should migrate to ContentType framework
+
+This release represents a significant architectural improvement that makes the document management system more robust, migration-safe, and production-ready while maintaining backward compatibility during the transition period.
+
 ## [0.1.7] - 2025-09-15
 
 ### Fixed

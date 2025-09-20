@@ -12,6 +12,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from django.contrib.contenttypes.models import ContentType
+
 try:
     from django_crud_audit.models import BaseModel
 except (ImportError, ModuleNotFoundError):
@@ -37,7 +39,7 @@ class DocumentType(BaseCatalogModel):
     """
     Types of documents that can be uploaded to the system
     """
-    DEFAULT_CODE_ID = getattr(settings, 'DOCUMENT_MANAGER_DEFAULT_DOCUMENT_TYPE_CODE', 'generic')
+    DEFAULT_CODE_ID = getattr(settings, 'DOCUMENT_MANAGER_DEFAULT_DOCUMENT_TYPE_CODE', -1)
     
     # Document-specific fields
     file_extensions = models.JSONField(
@@ -194,11 +196,8 @@ class DocumentVersion(BaseModel):
                 self.file_size_bytes = self.file.size
                 
                 # Compute SHA-256 hash
-                hasher = hashlib.sha256()
-                for chunk in self.file.chunks():
-                    hasher.update(chunk)
-                self.file_hash = hasher.hexdigest()
-                
+                self.file_hash = self.compute_file_hash()
+
                 # Detect MIME type
                 mime_type, _ = mimetypes.guess_type(self.file.name)
                 self.mime_type = mime_type or 'application/octet-stream'
@@ -222,9 +221,9 @@ class DocumentVersion(BaseModel):
                 )['max_version'] or 0
                 self.version = max_version + 1
 
-        # If this is being set as current, unset other current versions
-        if self.is_current and self.document.id:
-            self.document.versions.exclude(pk=self.pk).update(is_current=False)
+        # # If this is being set as current, unset other current versions
+        # if self.is_current and self.document.id:
+        #     self.document.versions.exclude(pk=self.pk).update(is_current=False)
 
         if not self.file_original_name and self.file:
             self.file_original_name = self.file.name
@@ -239,6 +238,20 @@ class DocumentVersion(BaseModel):
             'document_id': self.document.pk,
             'version': self.version
         })
+    
+    def compute_file_hash(self):
+        """
+        Recompute the file hash (useful if file was modified externally)
+        """
+        if not self.file:
+            raise ValueError("No file associated with this version")
+        
+        hasher = hashlib.sha256()
+        for chunk in self.file.chunks():
+            hasher.update(chunk)
+        
+        file_hash = hasher.hexdigest()
+        return file_hash
 
     def __str__(self):
         return f"{self.document.title} v{self.version}"
@@ -260,13 +273,13 @@ class Document(BaseModel):
     )
 
     # Ownership and Relationships
-    owner_uuid = models.UUIDField(
-        editable=False, 
-        help_text=_("Unique identifier for the document owner")
+    owner_content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        help_text=_("Content type of the document owner")
     )
-    owner_model = models.CharField(
-        max_length=255,
-        help_text=_("Model name of the document owner (e.g., 'Company', 'Individual', 'User')")
+    owner_uuid = models.UUIDField(
+        help_text=_("UUID of the document owner instance")
     )
     
     # Document Metadata
@@ -352,7 +365,47 @@ class Document(BaseModel):
         default='internal',
         help_text=_("Who can access this document")
     )
-    
+
+    @property
+    def owner(self):
+        """
+        Get the document owner instance based on content type and object ID.
+        Uses caching to avoid repeated database hits.
+        """
+        cache_attr = '_owner_cache'
+        if hasattr(self, cache_attr):
+            return getattr(self, cache_attr)
+        
+        try:
+            model_class = self.owner_content_type.model_class()
+            if model_class is None:
+                setattr(self, cache_attr, None)
+                return None
+                
+            owner_instance = model_class.objects.get(document_owner_uuid=self.owner_uuid)
+            setattr(self, cache_attr, owner_instance)
+            return owner_instance
+        except (AttributeError, Exception) as e:
+            # Handle any model DoesNotExist or other exceptions
+            try:
+                if hasattr(e, '__class__') and 'DoesNotExist' in e.__class__.__name__:
+                    logger.warning(f"Owner with UUID {self.owner_uuid} not found for content type {self.owner_content_type}")
+                else:
+                    logger.warning(f"Error resolving owner: {e}")
+            except:
+                pass
+            setattr(self, cache_attr, None)
+            return None
+        
+    def set_owner(self, owner_instance: 'BaseDocumentOwnerModel'):
+        """Set the owner using both ContentType and UUID"""
+        self.owner_content_type = ContentType.objects.get_for_model(owner_instance)
+        self.owner_uuid = owner_instance.document_owner_uuid
+
+        # Clear cache when owner changes
+        if hasattr(self, '_owner_cache'):
+            delattr(self, '_owner_cache')
+
     def clean(self):
         """
         Custom validation for document data
@@ -362,9 +415,9 @@ class Document(BaseModel):
         # Validate that we have a valid owner
         if not self.owner_uuid:
             raise ValidationError(_("Document must have an owner"))
-        
-        if not self.owner_model:
-            raise ValidationError(_("Document must specify owner model"))
+
+        if not self.owner_content_type:
+            raise ValidationError(_("Document must specify owner content type"))
 
         # Validate AI confidence score range
         if self.ai_confidence_score is not None and (
@@ -387,11 +440,11 @@ class Document(BaseModel):
         indexes = [
             # uuid7-optimized indexes - time ordering is built into uuid7
             models.Index(fields=['owner_uuid'], name='idx_document_owner_time'),
+            models.Index(fields=['owner_content_type', 'owner_uuid'], name='idx_owner_ct_uuid'),
+
             models.Index(fields=['document_type'], name='idx_document_type'),
             models.Index(fields=['validation_status'], name='idx_document_validation'),
-            models.Index(fields=['access_level'], name='idx_document_access'),
-            models.Index(fields=['is_confidential'], name='idx_document_confidential'),
-            models.Index(fields=['expiration_date'], name='idx_document_expiration'),
+
             # Composite index for owner queries by type
             models.Index(fields=['owner_uuid', 'document_type'], name='idx_owner_type'),
         ]
@@ -403,7 +456,7 @@ class Document(BaseModel):
             )
         ]
 
-    def is_expired(self):
+    def is_expired(self) -> bool:
         """
         Check if document is expired
         """
@@ -411,47 +464,68 @@ class Document(BaseModel):
             return False
         return self.expiration_date < timezone.now().date()
 
-    def set_current_version(self, version: 'DocumentVersion'):
+    def set_current_version(self, version: 'DocumentVersion') -> None:
         """
         Set the current version of the document.
         """
         if version.document_id != self.id:
             raise ValidationError("Version does not belong to this document")
         
-        current = self.current_version
-        if current:
-            current.is_current = False
-            current.save()
+        current = self.get_current_version()
+        with transaction.atomic():
+            if current:
+                current.is_current = False
+                current.save(update_fields=['is_current'])
 
-        version.is_current = True
-        version.save()
+            version.is_current = True
+            version.save(update_fields=['is_current'])
 
-    def save_new_version(self, file, set_current: bool = True, **kwargs):
+    def save_new_version(self, file, set_current: bool = True, strict: bool = True, **kwargs) -> 'DocumentVersion':
         """
         Save a new version of the document with atomic version increment.
+        If 'strict' is True, will raise ValidationError if there is a hash collision,
+        otherwise will reuse existing version with same hash.
         """
         with transaction.atomic():
             # Create new version
             new_version = DocumentVersion(
                 document=self,
                 file=file,
-                is_current=set_current,
-                **kwargs
+                is_current=False,  # Will set current later if needed
             )
             
-            # Save the version (will auto-compute metadata and version number)
+            # Compute file hash to check for duplicates
+            file_hash = new_version.compute_file_hash()
+            existing_version = DocumentVersion.objects.filter(
+                document=self,
+                file_hash=file_hash,
+            ).first()
+
+            if existing_version:
+                if strict:
+                    raise ValidationError("A version with the same file already exists.")
+                logger.info(f"Reusing existing version {existing_version.version} for document {self.pk} due to identical file hash.")
+                new_version = existing_version
+                if set_current:
+                    self.set_current_version(existing_version)
+                return existing_version
+
+            # Save the new version (will auto-compute metadata and version number)
             new_version.save()
-            
+
+            if set_current:
+                self.set_current_version(new_version)
+
             return new_version
 
     @classmethod
-    def create_with_file(cls, owner: 'BaseDocumentOwnerModel', file, document_type, title, description=None, **kwargs):
+    def create_with_file(cls, owner: 'BaseDocumentOwnerModel', file, document_type: str, title: str, description: str = None, **kwargs) -> 'Document':
         """
         Create a new document with its first version
         """
         # Validate ownership
         if not isinstance(owner, BaseDocumentOwnerModel):
-            raise ValidationError("Owner must be an instance of BaseDocumentOwnerModel")
+            raise ValidationError("Owner must be an instance of BaseDocumentOwnerModel or its subclass")
         
         # Get document type
         if isinstance(document_type, str):
@@ -461,8 +535,8 @@ class Document(BaseModel):
         
         # Create document
         document = cls(
+            owner_content_type=ContentType.objects.get_for_model(owner),
             owner_uuid=owner.document_owner_uuid,
-            owner_model=f"{owner._meta.app_label}.{owner._meta.model_name}",
             document_type=document_type,
             title=title,
             description=description,
@@ -475,33 +549,12 @@ class Document(BaseModel):
         logger.info(f"Created document {document} with initial version {version}")
         
         return document
-    
-    def get_owner_instance(self):
-        """
-        Return the actual owner model instance
-        """
-        if not self.owner_model or not self.owner_uuid:
-            return None
-        
-        try:
-            # Parse app_label.ModelName format
-            if '.' in self.owner_model:
-                app_label, model_name = self.owner_model.split('.', 1)
-                model_class = apps.get_model(app_label, model_name)
-            else:
-                # Fallback: assume it's just the model name
-                model_class = apps.get_model(self.owner_model)
-            
-            return model_class.objects.get(document_owner_uuid=self.owner_uuid)
-        except (LookupError, model_class.DoesNotExist, ValueError):
-            logger.warning(f"Owner model {self.owner_model} with UUID {self.owner_uuid} not found.")
-            return None
         
     def get_owner_display(self):
         """
         Return the display name of the document owner
         """
-        owner_instance = self.get_owner_instance()
+        owner_instance = self.owner
         if owner_instance:
             # Try common display methods
             if hasattr(owner_instance, 'get_display_name'):
@@ -549,11 +602,13 @@ class Document(BaseModel):
         """
         from datetime import datetime, timedelta
         cutoff_time = datetime.now() - timedelta(days=days_ago)
-        cutoff_uuid = uuid6.uuid7(cutoff_time)
         
+        # UUID7 encodes the timestamp, so we can construct a cutoff UUID
+        # All documents created after cutoff_time will have UUIDs >= to this cutoff
+        # Generate a UUID7 for comparison (we'll compare timestamps instead of UUIDs for simplicity)
         return cls.objects.filter(
             owner_uuid=owner_uuid,
-            id__gte=cutoff_uuid  # Uses uuid7 time ordering
+            created_at__gte=cutoff_time  # Use created_at timestamp instead
         )
 
     @classmethod 

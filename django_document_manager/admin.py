@@ -37,7 +37,7 @@ class DocumentAdmin(admin.ModelAdmin):
     ]
     search_fields = ['title', 'description', 'owner_uuid']
     readonly_fields = [
-        'owner_uuid', 'owner_model', 'date_created', 'date_updated',
+        'owner_uuid', 'owner_content_type', 'date_created', 'date_updated',
         'ai_extracted_data', 'ai_confidence_score'
     ]
     fieldsets = (
@@ -45,7 +45,7 @@ class DocumentAdmin(admin.ModelAdmin):
             'fields': ('title', 'description', 'document_type')
         }),
         ('Ownership', {
-            'fields': ('owner_uuid', 'owner_model'),
+            'fields': ('owner_uuid', 'owner_content_type'),
             'classes': ('collapse',)
         }),
         ('Validation', {
@@ -65,8 +65,8 @@ class DocumentAdmin(admin.ModelAdmin):
     )
     inlines = [DocumentVersionInline]
     
-    def owner_display(self, obj):
-        owner = obj.get_owner_instance()
+    def owner_display(self, obj: 'Document'):
+        owner = obj.owner  # Use the new property
         if owner:
             return str(owner)
         return f"UUID: {obj.owner_uuid}"
