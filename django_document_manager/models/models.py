@@ -608,7 +608,7 @@ class Document(BaseModel):
         # Generate a UUID7 for comparison (we'll compare timestamps instead of UUIDs for simplicity)
         return cls.objects.filter(
             owner_uuid=owner_uuid,
-            created_at__gte=cutoff_time  # Use created_at timestamp instead
+            date_created__gte=cutoff_time  # Use date_created timestamp field
         )
 
     @classmethod 
