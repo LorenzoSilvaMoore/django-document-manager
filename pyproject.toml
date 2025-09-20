@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-document-manager"
-version = "0.2.0"
+version = "0.2.1"
 description = "A comprehensive Django app for document management with versioning, validation, and AI processing."
 authors = [
     {name = "Lorenzo Silva", email = "lorenzo.smb.rayo@gmail.com"}

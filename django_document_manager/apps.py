@@ -5,3 +5,7 @@ class DjangoDocumentManagerConfig(AppConfig):
     name = 'django_document_manager'
     label = 'django_document_manager'
     verbose_name = 'Django Document Manager'
+
+    def ready(self):
+        import django_document_manager.catalogs
+        return super().ready()

@@ -7,6 +7,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.1] - 2025-09-20
+
+### Added
+
+- **Django Catalogs Integration**: Full integration with django-catalogs for document type management
+  - `DocumentTypesCatalog` class for loading and managing document types from JSON data files
+  - Automatic registration of document type catalog slot with django-catalogs framework
+  - Enhanced document type fields support including `file_extensions` list validation
+  - `DOCUMENTS_DOCUMENTTYPES_PATH` setting for configurable document types data location
+
+- **Configuration Management**: 
+  - New `conf.py` module with centralized settings management
+  - Path resolution for document types data files with BASE_DIR fallback
+  - Comprehensive validation for required settings with helpful error messages
+
+- **Type System Improvements**:
+  - Added `py.typed` marker file for enhanced type checking support
+  - Better IDE integration with static type analysis
+  - Improved development experience with full type hint coverage
+
+- **Package Distribution**:
+  - Enhanced MANIFEST.in to include all new configuration and type files
+  - Updated package metadata to include `conf.py` and `py.typed` files
+  - Improved installation robustness with proper file inclusion
+
+### Changed
+
+- **App Initialization**: Enhanced `DjangoDocumentManagerConfig.ready()` method to automatically register catalog slots
+- **Version Consistency**: Updated all version references to 0.2.1 across package files
+
+### Technical Improvements
+
+- **Catalog System**: Seamless integration with django-catalogs infrastructure for document type management
+- **Settings Architecture**: Centralized configuration with proper Django settings integration
+- **Type Safety**: Enhanced static analysis capabilities with py.typed marker
+
+This release focuses on improving the integration with the django-catalogs framework and providing better configuration management for document types, making the system more flexible and easier to configure in different deployment scenarios.
+
 ## [0.2.0] - 2025-09-20
 
 ### BREAKING CHANGES

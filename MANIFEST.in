@@ -9,6 +9,9 @@ recursive-include django_document_manager/data *.json
 include django_document_manager/__init__.py
 include django_document_manager/apps.py
 include django_document_manager/admin.py
+include django_document_manager/conf.py
+include django_document_manager/py.typed
+include django_document_manager/catalogs.py
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *~
