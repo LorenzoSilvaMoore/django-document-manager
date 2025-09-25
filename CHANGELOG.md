@@ -7,6 +7,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.2] - 2025-09-24
+
+### Added
+
+- **Enhanced Admin Interface**: Comprehensive improvements to Django admin for better document management workflow
+  - Visual status indicators with color-coded displays for validation status and expiration
+  - Bulk operations for validation workflow: `mark_as_validated` and `mark_as_pending` actions
+  - Date hierarchy navigation for efficient browsing of large document collections
+  - Cross-model navigation with clickable links between related documents and versions
+
+- **DocumentType Admin Enhancements**:
+  - `file_extensions_display` method showing first 3 extensions with overflow count
+  - Alphabetical ordering by name for better navigation
+  - Optimized pagination with 50 items per page
+
+- **Document Admin Improvements**:
+  - `current_version_display` showing version numbers (v1, v2, etc.)
+  - `expiration_status` with visual indicators (red for expired, green for valid)
+  - Enhanced filtering with improved date field filters
+  - Bulk validation actions with proper user assignment and timestamps
+
+- **DocumentVersion Admin Features**:
+  - `document_link` for clickable navigation to parent documents
+  - `is_current_display` with visual indicators (green checkmark for current versions)
+  - Enhanced `file_size_display` with sortable, human-readable formatting
+  - Date hierarchy and improved list filtering capabilities
+
+### Changed
+
+- **Admin List Displays**: Enhanced information density with better visual organization
+- **Pagination**: Optimized page sizes (25 for documents, 50 for types/versions) for better performance
+- **Ordering**: Implemented logical default ordering (newest first for time-based models, alphabetical for types)
+- **Inline Configuration**: Improved DocumentVersionInline with proper field organization and newest-first ordering
+
+### Fixed
+
+- **Admin FieldError**: Resolved "Unknown field(s) (file_size_display) specified for DocumentVersion" error
+- **Inline Field Configuration**: Properly configured readonly_fields vs fields in DocumentVersionInline
+- **Admin Navigation**: Fixed cross-model links with proper URL generation
+
+### Technical Improvements
+
+- **Visual Feedback**: Added comprehensive status indicators using `format_html` for better user experience
+- **Admin Methods**: Implemented proper ordering support with `admin_order_field` attributes
+- **User Experience**: Enhanced workflow efficiency with bulk operations and improved navigation
+- **Error Handling**: Better validation and feedback in admin bulk operations
+
+### Migration Cleanup
+
+- **Database Migrations**: Removed obsolete initial migration file for cleaner migration history
+- **Migration Structure**: Maintained data integrity while improving migration organization
+
+This release focuses on significantly improving the day-to-day usability of the document management system through enhanced Django admin interface, making it more efficient and user-friendly for administrators and content managers.
+
 ## [0.2.1] - 2025-09-20
 
 ### Added
