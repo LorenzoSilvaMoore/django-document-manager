@@ -116,6 +116,15 @@ class ExistingUser(User, BaseDocumentOwnerModel):
 3. Run `python manage.py populate_document_owner_uuids` - populates UUIDs for existing instances
 4. Done! All instances now have document ownership capability
 
+**Guaranteed UUID Generation** (New in v0.2.4): Custom manager and queryset ensure `document_owner_uuid` is automatically generated for ALL creation methods:
+- Direct save: `Company(name="Test").save()` ✓ UUID auto-generated
+- Manager create: `Company.objects.create(name="Test")` ✓ UUID auto-generated  
+- Conditional creates: `Company.objects.get_or_create()`, `update_or_create()` ✓ UUID auto-generated
+- Bulk operations: `Company.objects.bulk_create([...])` ✓ UUIDs auto-generated for all
+- UUID Protection: UUIDs cannot be modified after creation - updates are automatically blocked with warnings
+
+No manual UUID management required! See `UUID_GENERATION_GUIDE.md` for complete details.
+
 ### 2. Create and Upload Documents
 
 ```python

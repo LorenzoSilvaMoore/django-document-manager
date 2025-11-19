@@ -15,7 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.contenttypes.models import ContentType
 
 try:
-    from django_crud_audit.models import BaseModel
+    from django_crud_audit.models import BaseModel, AuditableManager, AuditableQuerySet
 except (ImportError, ModuleNotFoundError):
     raise ImportError("BaseModel must be available from django_crud_audit.")
 
@@ -621,7 +621,129 @@ class Document(BaseModel):
             owner_uuid=owner_uuid
         ).order_by('-id')[:limit]  # uuid7 ordering = time ordering
 
-
+class DocumentOwnerManager(AuditableManager):
+    """
+    Manager for Document Owner models to facilitate document queries
+    and guarantee UUID generation for all operations
+    """
+    def get_queryset(self):
+        """Return custom queryset that handles UUID generation"""
+        return DocumentOwnerQuerySet(self.model, using=self._db)
+    
+    def create(self, **kwargs):
+        """
+        Override create to ensure document_owner_uuid is set
+        """
+        if 'document_owner_uuid' not in kwargs or kwargs['document_owner_uuid'] is None:
+            kwargs['document_owner_uuid'] = _generate_uuid7()
+        return super().create(**kwargs)
+    
+    def get_or_create(self, defaults=None, **kwargs):
+        """
+        Override get_or_create to ensure document_owner_uuid is set on creation
+        """
+        if defaults is None:
+            defaults = {}
+        if 'document_owner_uuid' not in defaults and 'document_owner_uuid' not in kwargs:
+            defaults['document_owner_uuid'] = _generate_uuid7()
+        return super().get_or_create(defaults=defaults, **kwargs)
+    
+    def update_or_create(self, defaults=None, **kwargs):
+        """
+        Override update_or_create to ensure document_owner_uuid is set on creation
+        Note: UUIDs are never updated for existing records, only set for new ones
+        """
+        if defaults is None:
+            defaults = {}
+        # Ensure UUID is generated for new instances
+        if 'document_owner_uuid' not in defaults and 'document_owner_uuid' not in kwargs:
+            defaults['document_owner_uuid'] = _generate_uuid7()
+        # Remove document_owner_uuid from defaults if it's None (prevent overwriting existing UUIDs)
+        if 'document_owner_uuid' in defaults and defaults['document_owner_uuid'] is None:
+            del defaults['document_owner_uuid']
+        return super().update_or_create(defaults=defaults, **kwargs)
+    
+    def bulk_create(self, objs, **kwargs):
+        """
+        Override bulk_create to ensure document_owner_uuid is set for all objects
+        """
+        for obj in objs:
+            if not obj.document_owner_uuid:
+                obj.document_owner_uuid = _generate_uuid7()
+        return super().bulk_create(objs, **kwargs)
+    
+    def bulk_update(self, objs, fields, **kwargs):
+        """
+        Override bulk_update to ensure document_owner_uuid is never modified
+        """
+        if 'document_owner_uuid' in fields:
+            fields = [f for f in fields if f != 'document_owner_uuid']
+        return super().bulk_update(objs, fields, **kwargs)
+    
+class DocumentOwnerQuerySet(AuditableQuerySet):
+    """
+    QuerySet for Document Owner models to facilitate document queries
+    and guarantee UUID integrity
+    """
+    def with_documents(self):
+        """
+        Filter owners that have at least one document
+        """
+        from .models import Document
+        
+        owner_uuids = Document.objects.values_list('owner_uuid', flat=True).distinct()
+        return self.filter(
+            document_owner_uuid__in=owner_uuids,
+            document_owner_uuid__isnull=False
+        )
+    
+    def update(self, **kwargs):
+        """
+        Override update to prevent modifying document_owner_uuid
+        and ensure UUIDs are generated for records without them
+        """
+        # Never allow updating document_owner_uuid via queryset.update()
+        if 'document_owner_uuid' in kwargs:
+            del kwargs['document_owner_uuid']
+            logger.warning(
+                "Attempted to update document_owner_uuid via queryset.update(). "
+                "UUIDs cannot be modified after creation."
+            )
+        
+        return super().update(**kwargs)
+    
+    def update_or_create(self, defaults=None, **kwargs):
+        """
+        Override update_or_create to ensure document_owner_uuid is set on creation
+        """
+        if defaults is None:
+            defaults = {}
+        # Ensure UUID is generated for new instances
+        if 'document_owner_uuid' not in defaults and 'document_owner_uuid' not in kwargs:
+            defaults['document_owner_uuid'] = _generate_uuid7()
+        # Remove document_owner_uuid from defaults if it's None
+        if 'document_owner_uuid' in defaults and defaults['document_owner_uuid'] is None:
+            del defaults['document_owner_uuid']
+        return super().update_or_create(defaults=defaults, **kwargs)
+    
+    def get_or_create(self, defaults=None, **kwargs):
+        """
+        Override get_or_create to ensure document_owner_uuid is set on creation
+        """
+        if defaults is None:
+            defaults = {}
+        if 'document_owner_uuid' not in defaults and 'document_owner_uuid' not in kwargs:
+            defaults['document_owner_uuid'] = _generate_uuid7()
+        return super().get_or_create(defaults=defaults, **kwargs)
+    
+    def bulk_create(self, objs, **kwargs):
+        """
+        Override bulk_create to ensure document_owner_uuid is set
+        """
+        for obj in objs:
+            if not obj.document_owner_uuid:
+                obj.document_owner_uuid = _generate_uuid7()
+        return super().bulk_create(objs, **kwargs)
 
 class BaseDocumentOwnerModel(BaseModel):
     """
@@ -635,6 +757,7 @@ class BaseDocumentOwnerModel(BaseModel):
     - null=True allows existing records to work seamlessly
     - unique=True ensures data integrity
     - UUIDs are generated in save() method for new instances
+    - Custom manager/queryset ensure UUIDs for bulk operations
     - Use populate_document_owner_uuids management command for existing data
     """
     document_owner_uuid = models.UUIDField(
@@ -644,6 +767,9 @@ class BaseDocumentOwnerModel(BaseModel):
         db_index=True, 
         help_text=_("Unique identifier for the document owner entity")
     )
+    
+    # Use custom manager to guarantee UUID generation
+    objects = DocumentOwnerManager()
 
     class Meta:
         abstract = True

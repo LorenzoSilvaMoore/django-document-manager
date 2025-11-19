@@ -7,6 +7,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.4] - 2025-11-19
+
+### Added
+
+- **Guaranteed UUID Generation System**: Comprehensive manager and queryset overrides ensuring `document_owner_uuid` is always generated for all creation methods
+  - Custom `DocumentOwnerManager` with UUID generation for `create()`, `get_or_create()`, `update_or_create()`, `bulk_create()`
+  - Custom `DocumentOwnerQuerySet` with UUID protection for `update()`, `update_or_create()`, `get_or_create()`, `bulk_create()`
+  - Automatic UUID generation for all ORM operations - no manual management required
+  - UUID immutability protection - prevents accidental UUID modifications after creation
+  - Warning logs when code attempts to modify UUIDs via queryset operations
+
+- **Documentation**:
+  - `UUID_GENERATION_GUIDE.md`: Comprehensive guide explaining UUID generation guarantees and protection mechanisms
+  - `test_uuid_generation.py`: Test script demonstrating UUID generation across all ORM operations
+
+### Changed
+
+- **BaseDocumentOwnerModel**: Now uses `DocumentOwnerManager` as default manager for automatic UUID handling
+- **Manager Operations**: All creation methods (`create`, `get_or_create`, `update_or_create`, `bulk_create`) now guarantee UUID generation
+- **QuerySet Operations**: Enhanced with UUID generation for creation and protection against UUID modification
+- **Bulk Operations**: `bulk_create` generates UUIDs for all objects; `bulk_update` automatically strips UUID from fields list
+
+### Fixed
+
+- **Incomplete Code**: Fixed incomplete `if` statement in `DocumentOwnerQuerySet.update()` method
+- **UUID Generation Gaps**: Eliminated scenarios where UUIDs might not be generated (bulk operations, conditional creates)
+- **UUID Modification Risk**: Prevented accidental UUID overwrites via `update()` and `bulk_update()` operations
+
+### Technical Details
+
+- Enhanced imports from `django_crud_audit.models`: Added `AuditableManager` and `AuditableQuerySet`
+- Manager and QuerySet inherit from auditable base classes for full audit trail integration
+- UUID generation happens at manager/queryset level before save, ensuring consistency
+- Protection mechanisms implemented with proper logging for debugging
+- All creation paths (direct save, manager methods, bulk operations) now covered
+
+### Developer Experience
+
+- **Zero Manual UUID Management**: Developers can use any Django ORM method without worrying about UUIDs
+- **Protection by Default**: UUID immutability enforced at the ORM level
+- **Clear Warnings**: Attempted UUID modifications are logged with helpful messages
+- **Comprehensive Testing**: Test script validates all ORM operations and protection mechanisms
+- **Better Documentation**: Complete guide showing exactly how UUID generation works across all scenarios
+
+### Migration Notes
+
+No migrations required - this is a pure code enhancement. Existing records continue to work:
+- Records without UUIDs will get them on next save (via existing `save()` logic)
+- New records get UUIDs through manager/queryset regardless of creation method
+- No breaking changes to existing functionality
+
 ## [0.2.2] - 2025-09-24
 
 ### Added
