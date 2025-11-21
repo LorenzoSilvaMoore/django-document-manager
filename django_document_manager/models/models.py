@@ -11,6 +11,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.utils.text import get_valid_filename
 
 from django.contrib.contenttypes.models import ContentType
 
@@ -75,17 +76,46 @@ class DocumentType(BaseCatalogModel):
 # Document upload path function
 def document_upload_to(instance, filename):
     """
-    Generate upload path for document files
-    """
+    Generate upload path for document files.
+    
+    Best practice: Returns full path including sanitized filename.
+    Organizes files by owner UUID and version for better structure.
+    """    
+    # Sanitize filename to prevent directory traversal and problematic characters
+    clean_filename = get_valid_filename(filename)
+    
     # If document doesn't have an ID yet, create a temporary path
     # The file will be moved to proper location after document is saved
     if not instance.document or not instance.document.pk:
         # Use a temporary UUID-based path
         temp_id = str(uuid6.uuid7())
-        return f"documents/temp/{temp_id}/{filename}"
+        return f"documents/temp/{temp_id}/{clean_filename}"
     
-    # Use actual document ID for the path
-    return f"documents/{instance.document.owner_uuid}/{instance.version}_{filename}"
+    # Use owner UUID for the path (better than document ID for privacy/security)
+    owner_path = str(instance.document.owner_uuid)
+    
+    # Version prefix helps identify file versions and prevents overwrites
+    # If version not set yet (pre-save), use a timestamp to ensure uniqueness
+    if instance.version:
+        versioned_filename = f"v{instance.version}_{clean_filename}"
+    else:
+        # Fallback during initial upload before version is assigned
+        import time
+        timestamp = int(time.time() * 1000)  # millisecond precision
+        versioned_filename = f"tmp{timestamp}_{clean_filename}"
+
+    all_path = f"documents/{owner_path}/{versioned_filename}"
+
+    # Check for length limits (Django/FileSystem)
+    max_path_length = 255  # Typical max filename length on many filesystems
+    if len(all_path) > max_path_length:
+        logger.warning(f"File path length exceeds {max_path_length} characters: {all_path}, truncating filename.")
+        # Truncate the filename to fit within the limit
+        excess_length = len(all_path) - max_path_length
+        truncated_filename = versioned_filename[:-excess_length]
+        all_path = f"documents/{owner_path}/{truncated_filename}"
+
+    return all_path
 
 
 # TODO: hack .save to compute file_size_bytes and file_hash
@@ -96,7 +126,7 @@ class DocumentVersion(BaseModel):
     # File Information
     file = models.FileField(
         upload_to=document_upload_to,
-        help_text=_("The actual document file")
+        help_text=_("The actual document file"),
     )
     file_size_bytes = models.BigIntegerField(
         help_text=_("Size of the file in bytes")
@@ -259,7 +289,155 @@ class DocumentVersion(BaseModel):
     def __repr__(self):
         return f"DocumentVersion(document={self.document.pk}, version={self.version}, current={self.is_current})"
 
+class DocumentGroup(models.Model):
+    """
+    Model to group documents by related owner entities.
+    This allows associating multiple document owners under a common group UUID.
+    """
+    group_uuid = models.UUIDField(
+        primary_key=True,
+        default=_generate_uuid7,
+        editable=False,
+        help_text=_("Unique identifier for the document group")
+    )
+    name = models.CharField(
+        max_length=200,
+        help_text=_("Name of the document group")
+    )
+    description = models.TextField(
+        null=True,
+        blank=True,
+        help_text=_("Description of the document group")
+    )
+    metadata = models.JSONField(
+        null=True,
+        blank=True,
+        help_text=_("Additional metadata for the document group")
+    )
 
+    class Meta:
+        db_table = 'dm_document_group'
+        verbose_name = _('document group')
+        verbose_name_plural = _('document groups')
+
+    def __str__(self):
+        return f"{self.name} ({self.group_uuid})"
+
+
+class DocumentQuerySet(AuditableQuerySet):
+    """
+    Custom queryset for Document model
+    """
+    def in_groups(self, groups):
+        """
+        Filter documents that belong to any of the specified groups.
+        
+        Args:
+            groups: Can be one of the following:
+                   - DocumentGroup QuerySet
+                   - List/tuple containing:
+                     * DocumentGroup instances
+                     * UUID objects
+                     * UUID strings
+                     * Mix of the above types
+                   - Single DocumentGroup instance
+                   - Related manager (e.g., owner.document_groups)
+                   
+        Returns:
+            QuerySet: Documents that belong to any of the specified groups
+            
+        Raises:
+            ValueError: If groups parameter or its contents are invalid
+            
+        Examples:
+            # Using a DocumentGroup queryset
+            Document.objects.in_groups(DocumentGroup.objects.filter(name__startswith='Sales'))
+            
+            # Using DocumentGroup instances
+            group = DocumentGroup.objects.first()
+            Document.objects.in_groups([group])
+            
+            # Using related manager
+            owner = MyModel.objects.first()
+            Document.objects.in_groups(owner.document_groups.all())
+            
+            # Using UUID objects
+            Document.objects.in_groups([uuid.UUID('...'), uuid.UUID('...')])
+            
+            # Using UUID strings
+            Document.objects.in_groups(['550e8400-e29b-41d4-a716-446655440000', ...])
+            
+            # Mixed types
+            Document.objects.in_groups([group_instance, uuid_obj, 'uuid-string'])
+            
+            # Chain with other filters
+            Document.objects.in_groups([group]).filter(document_type__code='invoice')
+        """
+        import uuid as uuid_module
+        from django.db.models import QuerySet
+        from django.db.models.manager import BaseManager
+        
+        # Handle QuerySet or Manager (like related manager owner.document_groups)
+        if isinstance(groups, (QuerySet, BaseManager)):
+            # Extract group_uuid values from the queryset
+            group_uuids = groups.values_list('group_uuid', flat=True)
+            if not group_uuids:
+                return self.none()
+            return self.filter(groups__group_uuid__in=group_uuids).distinct()
+        
+        # Handle single DocumentGroup instance
+        if isinstance(groups, DocumentGroup):
+            return self.filter(groups__group_uuid=groups.group_uuid).distinct()
+        
+        # Validate input is a list or tuple
+        if not isinstance(groups, (list, tuple)):
+            raise ValueError(
+                "groups parameter must be a DocumentGroup instance, QuerySet, "
+                f"or list/tuple of groups/UUIDs. Got {type(groups).__name__} instead."
+            )
+        
+        # Empty list should return empty queryset
+        if not groups:
+            return self.none()
+        
+        # Validate and normalize to UUIDs
+        validated_uuids = []
+        for idx, group in enumerate(groups):
+            if isinstance(group, DocumentGroup):
+                # DocumentGroup instance
+                validated_uuids.append(group.group_uuid)
+            elif isinstance(group, uuid_module.UUID):
+                # Already a UUID object, use it directly
+                validated_uuids.append(group)
+            elif isinstance(group, str):
+                # String - attempt to parse as UUID
+                try:
+                    validated_uuids.append(uuid_module.UUID(group))
+                except (ValueError, AttributeError) as e:
+                    raise ValueError(
+                        f"Invalid UUID string at index {idx}: '{group}'. "
+                        f"Must be a valid UUID format. Error: {e}"
+                    )
+            else:
+                # Invalid type
+                raise ValueError(
+                    f"Invalid type at index {idx}: {type(group).__name__}. "
+                    "Each group identifier must be a DocumentGroup instance, "
+                    "UUID object, or valid UUID string."
+                )
+        
+        # Filter documents by groups
+        return self.filter(groups__group_uuid__in=validated_uuids).distinct()
+
+
+class DocumentManager(AuditableManager.from_queryset(DocumentQuerySet)):
+    """
+    Custom manager for Document model that includes DocumentQuerySet methods.
+    This combines the auditable functionality with custom queryset methods.
+    """
+    def get_queryset(self):
+        """Override to use DocumentQuerySet and filter deleted items"""
+        return DocumentQuerySet(self.model, using=self._db).filter(date_deleted__isnull=True)
 
 class Document(BaseModel):
     """
@@ -280,6 +458,12 @@ class Document(BaseModel):
     )
     owner_uuid = models.UUIDField(
         help_text=_("UUID of the document owner instance")
+    )
+    groups = models.ManyToManyField(
+        DocumentGroup,
+        blank=True,
+        related_name="documents",
+        help_text=_("Groups this document belongs to")
     )
     
     # Document Metadata
@@ -365,6 +549,9 @@ class Document(BaseModel):
         default='internal',
         help_text=_("Who can access this document")
     )
+    
+    # Custom manager
+    objects = DocumentManager()
 
     @property
     def owner(self):
@@ -766,6 +953,13 @@ class BaseDocumentOwnerModel(BaseModel):
         editable=False,
         db_index=True, 
         help_text=_("Unique identifier for the document owner entity")
+    )
+
+    document_groups = models.ManyToManyField(
+        DocumentGroup,
+        blank=True,
+        related_name="document_owners",
+        help_text=_("Document groups associated with this owner")
     )
     
     # Use custom manager to guarantee UUID generation

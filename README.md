@@ -163,7 +163,70 @@ all_versions = document.versions.all()
 latest_version = document.get_latest_version()
 ```
 
-### 4. Time-Based Queries (UUID7 Optimization)
+### 4. Document Groups and Filtering
+
+Organize documents into groups and filter efficiently:
+
+```python
+from django_document_manager.models import DocumentGroup
+
+# Create document groups
+sales_group = DocumentGroup.objects.create(
+    name='Sales Documents',
+    description='All sales-related documents'
+)
+
+# Associate documents with groups
+document.groups.add(sales_group)
+
+# Associate owners with groups
+company.document_groups.add(sales_group)
+
+# Filter documents by groups - multiple flexible ways:
+
+# Using a single DocumentGroup instance
+docs = Document.objects.in_groups(sales_group)
+
+# Using a QuerySet
+active_groups = DocumentGroup.objects.filter(name__icontains='active')
+docs = Document.objects.in_groups(active_groups)
+
+# Using owner's related manager
+docs = Document.objects.in_groups(company.document_groups.all())
+
+# Using a list of UUIDs
+docs = Document.objects.in_groups([sales_group.group_uuid, other_group.group_uuid])
+
+# Mixed types (instances, UUIDs, strings)
+docs = Document.objects.in_groups([
+    sales_group,                    # DocumentGroup instance
+    uuid.UUID('550e8400...'),      # UUID object
+    '6ba7b810-9dad-11d1-80b4...'   # UUID string
+])
+
+# Chain with other filters
+invoices = Document.objects.in_groups(sales_group).filter(
+    document_type__code='invoice',
+    validation_status='validated'
+)
+
+# Complex queries
+recent_sales_docs = (
+    Document.objects
+    .in_groups(company.document_groups.all())
+    .filter(validation_status='validated')
+    .select_related('document_type')
+    .order_by('-date_created')[:20]
+)
+```
+
+**Input Validation**: The `in_groups()` method performs strict validation:
+- Accepts: DocumentGroup instances, QuerySets, related managers, lists/tuples of groups/UUIDs
+- Validates all UUID strings are properly formatted
+- Provides clear error messages with index positions for debugging
+- Returns empty queryset for empty list (not an error)
+
+### 5. Time-Based Queries (UUID7 Optimization)
 
 ```python
 # Get recent documents (leverages UUID7 time ordering)
@@ -176,7 +239,7 @@ week_docs = Document.get_documents_since(company.document_owner_uuid, days_ago=7
 newest_first = Document.objects.filter(owner_uuid=company.document_owner_uuid).order_by('-id')
 ```
 
-### 5. Document Validation Workflow
+### 6. Document Validation Workflow
 
 ```python
 from django.utils import timezone

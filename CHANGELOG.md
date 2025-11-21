@@ -7,6 +7,61 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.5] - 2025-11-21
+
+### Added
+
+- **Document Groups**: New `DocumentGroup` model for organizing documents into logical groups
+  - UUID-based primary key using UUID7 for time-ordered group identifiers
+  - Name, description, and metadata fields for flexible group configuration
+  - Many-to-many relationships: documents can belong to multiple groups
+  - `BaseDocumentOwnerModel` can be associated with multiple document groups
+
+- **Custom ORM Method `Document.objects.in_groups()`**: Flexible document filtering by groups
+  - Accepts `DocumentGroup` instances: `Document.objects.in_groups(group)`
+  - Accepts `DocumentGroup` QuerySets: `Document.objects.in_groups(DocumentGroup.objects.filter(...))`
+  - Accepts related managers: `Document.objects.in_groups(owner.document_groups.all())`
+  - Accepts lists/tuples with mixed types: instances, UUIDs, or UUID strings
+  - Strict input validation with clear error messages
+  - Chainable with other Django ORM methods
+  - Uses `.distinct()` to prevent duplicate results
+  - Integrates with soft-delete (excludes deleted documents)
+
+- **DocumentQuerySet**: Custom queryset class for Document model
+  - `in_groups()` method for filtering by document groups
+  - Inherits from `AuditableQuerySet` for full audit trail integration
+
+- **DocumentManager**: Enhanced manager using `from_queryset()` pattern
+  - Exposes `in_groups()` method at manager level
+  - Maintains soft-delete filtering
+  - Combines auditable functionality with custom methods
+
+### Changed
+
+- **Document Model**: Added `groups` ManyToManyField to `DocumentGroup`
+- **Document Model**: Now uses custom `DocumentManager` as default manager
+- **BaseDocumentOwnerModel**: Added `document_groups` ManyToManyField to `DocumentGroup`
+- **Models Export**: Added `DocumentGroup` to `django_document_manager.models` exports
+- **File Upload Path**: Enhanced `document_upload_to()` with filename sanitization and path validation
+  - Uses `get_valid_filename()` to prevent directory traversal
+  - Adds version prefixes to filenames for better organization
+  - Validates path lengths against filesystem limits (255 chars)
+  - Improved temporary file handling during upload
+
+### Migration
+
+- **0003_documentgroup_document_groups.py**: Creates `DocumentGroup` table and establishes relationships
+  - Creates `dm_document_group` table with UUID primary key
+  - Adds `groups` M2M field to `Document` model
+  - Adds `document_groups` M2M field to `BaseDocumentOwnerModel`
+
+### Technical Details
+
+- Custom QuerySet pattern properly integrated with manager using `from_queryset()`
+- UUID validation accepts both UUID objects and strings with proper error handling
+- Efficient database queries using `IN` clause with UUID filtering
+- Related manager detection using `isinstance(groups, BaseManager)` check
+
 ## [0.2.4] - 2025-11-19
 
 ### Added

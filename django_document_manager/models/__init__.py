@@ -1,3 +1,3 @@
-from .models import DocumentType, Document, DocumentVersion, BaseDocumentOwnerModel
+from .models import DocumentType, Document, DocumentVersion, BaseDocumentOwnerModel, DocumentGroup
 
-__all__ = ['DocumentType', 'Document', 'DocumentVersion', 'BaseDocumentOwnerModel']
+__all__ = ['DocumentType', 'Document', 'DocumentVersion', 'BaseDocumentOwnerModel', 'DocumentGroup']
