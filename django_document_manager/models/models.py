@@ -290,11 +290,6 @@ class DocumentVersion(BaseModel):
                 logger.error(f"Error processing file {self.file.name}: {e}")
                 raise ValidationError(f"Error processing file: {e}")
         
-        # Run validation (this calls clean())
-        # Skip validation if explicitly requested via kwargs
-        if not kwargs.pop('skip_validation', False):
-            self.full_clean()
-        
         # Auto-increment version number if not set (with atomic transaction)
         if not self.version and self.document_id:
             with transaction.atomic():
@@ -310,6 +305,12 @@ class DocumentVersion(BaseModel):
                     max_version=models.Max('version')
                 )['max_version'] or 0
                 self.version = max_version + 1
+
+        # Run validation (this calls clean())
+        # Skip validation if explicitly requested via kwargs
+        # This happens AFTER metadata computation and version assignment
+        if not kwargs.pop('skip_validation', False):
+            self.full_clean(exclude=['file_size_bytes', 'file_hash', 'mime_type', 'version'])
 
         # # If this is being set as current, unset other current versions
         # if self.is_current and self.document.id:
@@ -744,13 +745,13 @@ class Document(BaseModel):
                 is_current=False,  # Will set current later if needed
             )
             
-            # Validate the file before processing (this will check extensions and size)
-            # This ensures validation errors are raised before any database operations
+            # Validate only the file-related aspects (extension and size)
+            # Don't validate other fields that aren't set yet (hash, size_bytes, mime_type, version)
             try:
-                new_version.full_clean()
+                new_version.clean()  # This only validates file extension and size
             except ValidationError as e:
                 # Re-raise with more context
-                logger.warning(f"Validation failed for new version of document {self.pk}: {e}")
+                logger.warning(f"File validation failed for new version of document {self.pk}: {e}")
                 raise
             
             # Compute file hash to check for duplicates
@@ -770,8 +771,8 @@ class Document(BaseModel):
                 return existing_version
 
             # Save the new version (will auto-compute metadata and version number)
-            # Skip validation since we already validated above
-            new_version.save(skip_validation=True)
+            # Validation will run during save but will exclude auto-computed fields
+            new_version.save()
 
             if set_current:
                 self.set_current_version(new_version)
