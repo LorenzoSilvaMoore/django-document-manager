@@ -958,7 +958,7 @@ class BaseDocumentOwnerModel(BaseModel):
     document_groups = models.ManyToManyField(
         DocumentGroup,
         blank=True,
-        related_name="document_owners",
+        related_name="%(app_label)s_%(class)s_owners",
         help_text=_("Document groups associated with this owner")
     )
     

@@ -125,6 +125,22 @@ class ExistingUser(User, BaseDocumentOwnerModel):
 
 No manual UUID management required! See `UUID_GENERATION_GUIDE.md` for complete details.
 
+**Document Groups Relationship** (New in v0.2.5): Each owner model automatically gets a `document_groups` many-to-many field. The reverse relationship from `DocumentGroup` uses dynamic naming:
+
+```python
+# For a Company model in 'myapp':
+company.document_groups.all()  # Forward relation (always 'document_groups')
+
+# Reverse relation is dynamically named: {app_label}_{model_name}_owners
+group.myapp_company_owners.all()  # Access all Company instances in this group
+
+# For a Customer model in 'sales' app:
+customer.document_groups.all()
+group.sales_customer_owners.all()  # Access all Customer instances in this group
+```
+
+This dynamic naming prevents conflicts when multiple models inherit from `BaseDocumentOwnerModel`.
+
 ### 2. Create and Upload Documents
 
 ```python
