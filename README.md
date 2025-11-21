@@ -672,7 +672,38 @@ if doc_type.requires_validation:
 max_size = doc_type.max_file_size_mb * 1024 * 1024  # Convert to bytes
 allowed_extensions = doc_type.file_extensions  # List of extensions
 
-# Check file compatibility
+# Automatic validation (v0.2.6+)
+# File validation happens automatically during save and add_version
+try:
+    document.add_version(file=uploaded_file)
+except ValidationError as e:
+    # Distinguish between different validation errors using error codes
+    if 'file' in e.error_dict:
+        file_errors = e.error_dict['file']
+        for error in file_errors:
+            if error.code == 'invalid_extension':
+                print(f"Invalid file extension: {error.message}")
+                # Handle extension error specifically
+            elif error.code == 'file_too_large':
+                print(f"File too large: {error.message}")
+                # Handle size error specifically
+            else:
+                print(f"Other file error: {error.message}")
+    else:
+        print(f"Upload failed: {e}")
+
+# Alternative: Simple error handling without checking codes
+try:
+    document.add_version(file=uploaded_file)
+except ValidationError as e:
+    # Get error message string
+    error_message = str(e)
+    if 'extension' in error_message.lower():
+        print("Extension validation failed")
+    elif 'size' in error_message.lower() or 'exceeds' in error_message.lower():
+        print("Size validation failed")
+
+# Manual validation check (if needed before upload)
 def is_file_valid(file, doc_type):
     # Check file size
     if file.size > doc_type.max_file_size_mb * 1024 * 1024:

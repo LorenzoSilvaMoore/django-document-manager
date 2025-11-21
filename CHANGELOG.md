@@ -7,6 +7,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.6] - 2025-11-21
+
+### Added
+
+- **DocumentType Code Field Configuration**: New customizable `code` field with configurable max length
+  - Controlled via `DOCUMENT_MANAGER_DOCUMENT_TYPE_CODE_MAX_LENGTH` setting (default: 50)
+  - Migration 0004 adds flexibility for longer document type codes
+
+- **File Validation System**: Comprehensive validation for document uploads
+  - Extension validation against DocumentType `file_extensions` list
+  - File size validation against DocumentType `max_file_size_mb` limit
+  - Validation errors include document type name and allowed values
+  - Validation occurs in `DocumentVersion.clean()` method
+  - Error codes for programmatic distinction: `invalid_extension` and `file_too_large`
+
+- **Save with Validation**: `DocumentVersion.save()` now calls `full_clean()` by default
+  - Automatic validation before saving new document versions
+  - Can be skipped with `save(skip_validation=True)` for internal operations
+  - Integrated into `Document.add_version()` workflow
+
+### Changed
+
+- **DocumentVersion.clean()**: Enhanced with file extension and size validation logic
+- **Document.add_version()**: Now validates files before processing to prevent invalid uploads
+  - ValidationError raised early with clear messages about requirement violations
+  - Prevents database operations for invalid files
+
+### Fixed
+
+- File extension validation now properly handles extensions with or without leading dots
+- File size comparison uses consistent MB units across validation messages
+
 ## [0.2.5] - 2025-11-21
 
 ### Added

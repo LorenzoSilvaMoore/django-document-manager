@@ -12,4 +12,4 @@ A comprehensive document management system for Django applications providing:
 - Admin interface and management commands
 """
 
-__version__ = '0.2.5'
+__version__ = '0.2.6'

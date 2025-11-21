@@ -1,3 +1,4 @@
+import os
 import logging
 import hashlib
 import mimetypes
@@ -41,6 +42,10 @@ class DocumentType(BaseCatalogModel):
     Types of documents that can be uploaded to the system
     """
     DEFAULT_CODE_ID = getattr(settings, 'DOCUMENT_MANAGER_DEFAULT_DOCUMENT_TYPE_CODE', -1)
+
+    code = models.CharField(
+        max_length=getattr(settings, 'DOCUMENT_MANAGER_DOCUMENT_TYPE_CODE_MAX_LENGTH', 50),
+    )
     
     # Document-specific fields
     file_extensions = models.JSONField(
@@ -213,12 +218,62 @@ class DocumentVersion(BaseModel):
         else:
             return f"{self.file_size_bytes / (1024 * 1024 * 1024):.1f} GB"
 
+    def clean(self):
+        """
+        Validate file against DocumentType restrictions.
+        This is called by full_clean() and should be called before saving.
+        """
+        super().clean()
+        
+        if not self.file:
+            return
+        
+        # Get the document type for validation
+        if not self.document or not self.document.document_type:
+            return  # Can't validate without document type
+        
+        document_type = self.document.document_type
+        
+        # Validate file extension
+        if document_type.file_extensions:  # Only validate if list is not empty
+            file_extension = os.path.splitext(self.file.name)[1].lower()
+            # Remove leading dot if present for comparison
+            file_extension = file_extension.lstrip('.')
+            
+            # Normalize extensions in the allowed list (remove dots, lowercase)
+            allowed_extensions = [
+                ext.lstrip('.').lower() 
+                for ext in document_type.file_extensions
+            ]
+            
+            if file_extension not in allowed_extensions:
+                allowed_ext_str = ', '.join([f'.{ext}' for ext in allowed_extensions])
+                raise ValidationError({
+                    'file': ValidationError(
+                        _(f"File extension '.{file_extension}' is not allowed for document type '{document_type.name}'. "
+                          f"Allowed extensions: {allowed_ext_str}"),
+                        code='invalid_extension'
+                    )
+                })
+        
+        # Validate file size
+        if hasattr(self.file, 'size'):
+            file_size_mb = self.file.size / (1024 * 1024)  # Convert bytes to MB
+            max_size_mb = document_type.max_file_size_mb
+            
+            if file_size_mb > max_size_mb:
+                raise ValidationError({
+                    'file': ValidationError(
+                        _(f"File size ({file_size_mb:.2f} MB) exceeds maximum allowed size "
+                          f"for document type '{document_type.name}' ({max_size_mb} MB)."),
+                        code='file_too_large'
+                    )
+                })
+
     def save(self, *args, **kwargs):
         """
-        Override save to compute file metadata
+        Override save to compute file metadata and validate.
         """
-        import os
-        
         # If file was uploaded and we need to compute metadata
         if self.file and not self.file_hash:
             try:
@@ -234,6 +289,11 @@ class DocumentVersion(BaseModel):
             except (IOError, OSError) as e:
                 logger.error(f"Error processing file {self.file.name}: {e}")
                 raise ValidationError(f"Error processing file: {e}")
+        
+        # Run validation (this calls clean())
+        # Skip validation if explicitly requested via kwargs
+        if not kwargs.pop('skip_validation', False):
+            self.full_clean()
         
         # Auto-increment version number if not set (with atomic transaction)
         if not self.version and self.document_id:
@@ -672,6 +732,9 @@ class Document(BaseModel):
         Save a new version of the document with atomic version increment.
         If 'strict' is True, will raise ValidationError if there is a hash collision,
         otherwise will reuse existing version with same hash.
+        
+        Raises:
+            ValidationError: If file extension or size doesn't meet DocumentType requirements
         """
         with transaction.atomic():
             # Create new version
@@ -680,6 +743,15 @@ class Document(BaseModel):
                 file=file,
                 is_current=False,  # Will set current later if needed
             )
+            
+            # Validate the file before processing (this will check extensions and size)
+            # This ensures validation errors are raised before any database operations
+            try:
+                new_version.full_clean()
+            except ValidationError as e:
+                # Re-raise with more context
+                logger.warning(f"Validation failed for new version of document {self.pk}: {e}")
+                raise
             
             # Compute file hash to check for duplicates
             file_hash = new_version.compute_file_hash()
@@ -698,7 +770,8 @@ class Document(BaseModel):
                 return existing_version
 
             # Save the new version (will auto-compute metadata and version number)
-            new_version.save()
+            # Skip validation since we already validated above
+            new_version.save(skip_validation=True)
 
             if set_current:
                 self.set_current_version(new_version)
