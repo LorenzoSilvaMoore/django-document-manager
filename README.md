@@ -160,6 +160,27 @@ document = Document.create_with_file(
     description='Annual financial report for Q4 2024',
     access_level='restricted'
 )
+
+# Document type with max count per owner (v0.2.7+)
+limited_type = DocumentType.objects.create(
+    code='passport',
+    name='Passport',
+    file_extensions=['.pdf', '.jpg'],
+    max_file_size_mb=5,
+    max_count_per_owner=1  # Only 1 passport per owner
+)
+
+# Will raise ValidationError if owner already has 1 passport
+try:
+    Document.create_with_file(
+        owner=company,
+        file=passport_file,
+        document_type=limited_type,
+        title='Company Passport'
+    )
+except ValidationError as e:
+    if e.code == 'max_count_exceeded':
+        print("Owner already has maximum number of passports")
 ```
 
 ### 3. Document Versioning
@@ -429,6 +450,7 @@ Catalog-based document type system with validation rules:
 **Document Validation:**
 - **`file_extensions`** - JSON array of allowed file extensions (e.g., `[".pdf", ".docx"]`)
 - **`max_file_size_mb`** - Maximum file size in megabytes
+- **`max_count_per_owner`** - Maximum documents of this type per owner (0 = unlimited, default: 0)
 - **`requires_validation`** - Whether documents need manual validation
 - **`is_financial`** - Special handling flag for financial documents
 
@@ -691,6 +713,32 @@ except ValidationError as e:
                 print(f"Other file error: {error.message}")
     else:
         print(f"Upload failed: {e}")
+
+# Document creation with max_count_per_owner enforcement (v0.2.7+)
+try:
+    document = Document.create_with_file(
+        owner=company,
+        file=uploaded_file,
+        document_type='financial',
+        title='Annual Report'
+    )
+except ValidationError as e:
+    # Check for specific error codes
+    if hasattr(e, 'code'):
+        if e.code == 'max_count_exceeded':
+            print(f"Maximum number of documents reached: {e.message}")
+        elif e.code == 'invalid_owner':
+            print(f"Invalid owner: {e.message}")
+        elif e.code == 'invalid_document_type':
+            print(f"Invalid document type: {e.message}")
+    # Handle file validation errors
+    elif 'file' in e.error_dict:
+        file_errors = e.error_dict['file']
+        for error in file_errors:
+            if error.code == 'invalid_extension':
+                print(f"Wrong file type: {error.message}")
+            elif error.code == 'file_too_large':
+                print(f"File too large: {error.message}")
 
 # Alternative: Simple error handling without checking codes
 try:

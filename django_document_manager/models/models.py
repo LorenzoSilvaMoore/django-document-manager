@@ -64,6 +64,10 @@ class DocumentType(BaseCatalogModel):
         default=False,
         help_text=_("Whether this is a financial document requiring special handling")
     )
+    max_count_per_owner = models.IntegerField(
+        default=0,
+        help_text=_("Maximum number of documents of this type per owner. Use 0 for unlimited.")
+    )
     
     def __str__(self):
         return f"{self.name} ({self.code})"
@@ -786,13 +790,23 @@ class Document(BaseModel):
         """
         # Validate ownership
         if not isinstance(owner, BaseDocumentOwnerModel):
-            raise ValidationError("Owner must be an instance of BaseDocumentOwnerModel or its subclass")
+            raise ValidationError("Owner must be an instance of BaseDocumentOwnerModel or its subclass", code='invalid_owner')
         
         # Get document type
         if isinstance(document_type, str):
             document_type = DocumentType.get_by_code(document_type)
             if not document_type:
-                raise ValidationError(f"Invalid document type: {document_type}")
+                raise ValidationError(f"Invalid document type: {document_type}", code='invalid_document_type')
+            
+        # Check max_count_per_owner constraint
+        if document_type.max_count_per_owner > 0:
+            existing_count = cls.objects.filter(
+                owner_content_type=ContentType.objects.get_for_model(owner),
+                owner_uuid=owner.document_owner_uuid,
+                document_type=document_type
+            ).count()
+            if existing_count >= document_type.max_count_per_owner:
+                raise ValidationError(f"Maximum number of documents of type {document_type} per owner exceeded.", code='max_count_exceeded')
         
         # Create document
         document = cls(

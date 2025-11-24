@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django_crud_audit',
     'django_catalogs',
     'django_document_manager',
+    'test_app',  # Test app for testing only
 ]
 
 MIDDLEWARE = [

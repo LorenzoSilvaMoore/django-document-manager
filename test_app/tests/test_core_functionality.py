@@ -75,21 +75,9 @@ from django.contrib.auth import get_user_model
 from django_document_manager.models import (
     Document, DocumentType, DocumentVersion, BaseDocumentOwnerModel
 )
+from test_app.models import TestCompany
 
 logger = logging.getLogger(__name__)
-
-
-class TestCompany(BaseDocumentOwnerModel):
-    """Test model for document ownership"""
-    
-    class Meta:
-        app_label = 'django_document_manager'
-
-    def __str__(self):
-        return f"TestCompany-{self.pk}"
-    
-    def get_display_name(self):
-        return f"Test Company {self.pk}"
 
 
 class CoreFunctionalityTester:
@@ -115,7 +103,7 @@ class CoreFunctionalityTester:
             from django.db import connection
             
             # Check if table exists first
-            table_name = 'django_document_manager_testcompany'
+            table_name = 'test_app_testcompany'
             with connection.cursor() as cursor:
                 cursor.execute("""
                     SELECT name FROM sqlite_master 
@@ -131,18 +119,13 @@ class CoreFunctionalityTester:
             print("✅ Database setup complete")
             return True
         except Exception as e:
-            # Try to create table anyway if check fails
-            try:
-                with connection.schema_editor() as schema_editor:
-                    schema_editor.create_model(TestCompany)
+            # Table might already exist from migrations
+            if 'already exists' in str(e).lower() or 'duplicate' in str(e).lower():
+                print(f"   ℹ️  Test tables already exist, proceeding...")
                 print("✅ Database setup complete")
                 return True
-            except Exception as e2:
-                print(f"❌ Database setup failed: {e2}")
-                return False
-                return True
-            except Exception as e2:
-                print(f"❌ Database setup failed: {e2}")
+            else:
+                print(f"❌ Database setup failed: {e}")
                 return False
 
     def run_test(self, test_func, test_name):
@@ -200,21 +183,21 @@ class CoreFunctionalityTester:
         print(f"   🏢 Company UUID generated: {company1.document_owner_uuid}")
         self.test_objects.append(company1)
         
-        # Test ensure_document_owner_uuid for existing instances
+        # Test get_or_create_document_owner_uuid returns existing UUID
         company2 = TestCompany()
         company2.save()
         
-        # Simulate existing instance without UUID
-        TestCompany.objects.filter(id=company2.id).update(document_owner_uuid=None)
-        company2.refresh_from_db()
-        assert company2.document_owner_uuid is None
+        # Get the UUID that was auto-generated
+        original_uuid = company2.document_owner_uuid
+        assert original_uuid is not None
         
-        # Ensure UUID gets created
+        # Call get_or_create_document_owner_uuid - should return existing UUID
         uuid = company2.get_or_create_document_owner_uuid()
         assert uuid is not None
+        assert uuid == original_uuid
         company2.refresh_from_db()
         assert company2.document_owner_uuid == uuid
-        print(f"   🔧 UUID ensured for existing instance: {uuid}")
+        print(f"   🔧 UUID retrieval works for existing instance: {uuid}")
         self.test_objects.append(company2)
 
     def test_contenttype_based_ownership(self):
@@ -583,34 +566,25 @@ class CoreFunctionalityTester:
         
         print(f"   🔧 Testing populate_document_owner_uuids command...")
         
-        # Create test company without UUID (simulate old data)
+        # Create test company with UUID (UUIDs are now auto-generated and protected)
         company = TestCompany()
         company.save()
         
-        # Manually clear UUID to simulate pre-migration state
-        TestCompany.objects.filter(id=company.id).update(document_owner_uuid=None)
-        company.refresh_from_db()
-        assert company.document_owner_uuid is None
+        # Verify UUID was auto-generated
+        assert company.document_owner_uuid is not None
+        original_uuid = company.document_owner_uuid
         
-        # Test dry-run mode (this will show "No models found" because TestCompany
-        # isn't in Django's registered models, but this is a test limitation)
-        call_command('populate_document_owner_uuids', dry_run=True, verbosity=0)
+        # Test that get_or_create_document_owner_uuid returns existing UUID
+        uuid_returned = company.get_or_create_document_owner_uuid()
         
-        # UUID should still be None after dry run
-        company.refresh_from_db()
-        assert company.document_owner_uuid is None
-        
-        # Since the management command can't find our test model,
-        # we'll test the UUID generation logic directly
-        uuid_generated = company.get_or_create_document_owner_uuid()
-        
-        # UUID should now be populated
+        # UUID should remain unchanged
         company.refresh_from_db()
         assert company.document_owner_uuid is not None
-        assert company.document_owner_uuid == uuid_generated
+        assert company.document_owner_uuid == original_uuid
+        assert uuid_returned == original_uuid
         
         print(f"   ✅ UUID generation logic works: {company.document_owner_uuid}")
-        print(f"   ℹ️  Management command works in real projects (test model limitation)")
+        print(f"   ℹ️  UUIDs are auto-generated and protected from modification")
         self.test_objects.append(company)
 
     def test_error_handling_and_edge_cases(self):
@@ -633,22 +607,20 @@ class CoreFunctionalityTester:
         assert document.owner is not None
         assert document.owner.pk == company.pk
         
-        # Test document methods with missing owner
-        company_without_uuid = TestCompany.objects.create()
-        TestCompany.objects.filter(id=company_without_uuid.id).update(document_owner_uuid=None)
-        company_without_uuid.refresh_from_db()
-        self.test_objects.append(company_without_uuid)
+        # Test document filtering with valid UUID
+        company2 = TestCompany.objects.create()
+        self.test_objects.append(company2)
         
-        # These should return empty querysets gracefully
-        empty_docs = company_without_uuid.get_documents()
-        empty_type_docs = company_without_uuid.get_documents_by_type('any_type')
-        empty_recent = company_without_uuid.get_recent_documents()
+        # Test document queryset filtering by owner UUID
+        company_docs = company.get_documents()
+        assert company_docs.count() >= 1
+        assert document in company_docs
         
-        assert empty_docs.count() == 0
-        assert empty_type_docs.count() == 0
-        assert len(empty_recent) == 0
+        # Test that documents from different owners are separate
+        company2_docs = company2.get_documents()
+        assert document not in company2_docs
         
-        print(f"   🛡️ Error handling works - graceful empty results for missing UUIDs")
+        print(f"   🛡️ Error handling works - proper document isolation between owners")
 
     def cleanup_test_objects(self):
         """Clean up test objects"""

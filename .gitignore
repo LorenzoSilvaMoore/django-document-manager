@@ -28,6 +28,9 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Test app migrations (not part of package)
+test_app/migrations/0*.py
+
 # Environments
 .env
 .venv

@@ -17,3 +17,5 @@ global-exclude *.pyo
 global-exclude *~
 global-exclude __pycache__
 global-exclude .DS_Store
+global-exclude test_app/*
+global-exclude core_build/*

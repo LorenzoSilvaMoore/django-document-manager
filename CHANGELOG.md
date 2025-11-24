@@ -7,6 +7,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.7] - 2025-11-23
+
+### Added
+
+- **Max Count Per Owner Constraint**: New `max_count_per_owner` field on DocumentType
+  - Limits number of documents of a specific type per owner
+  - Set to 0 for unlimited documents (default)
+  - Enforced in `Document.create_with_file()` method
+  - Raises `ValidationError` with code `max_count_exceeded` when limit reached
+  - Per-owner enforcement: each owner has their own independent count
+  - Migration: `0005_documenttype_max_count_per_owner.py`
+
+- **Test Infrastructure**: New `test_app` for isolated testing
+  - Dedicated test models (`TestCompany`, `TestPerson`) 
+  - Separate test migrations (not shipped with package)
+  - Comprehensive test suite with 8 tests covering all v0.2.7 features
+  - See `TESTING.md` for detailed testing guide
+
+### Changed
+
+- **ValidationError Error Codes**: Enhanced error codes in `Document.create_with_file()`
+  - `invalid_owner`: Raised when owner is not a BaseDocumentOwnerModel instance
+  - `invalid_document_type`: Raised when document type code is not found
+  - `max_count_exceeded`: Raised when document type limit per owner is reached
+
+### Fixed
+
+- **Validation Timing**: Fixed validation order in `DocumentVersion.save()`
+  - Validation now occurs AFTER metadata computation (file_size_bytes, file_hash, mime_type, version)
+  - Prevents "field cannot be null/blank" errors during file upload
+  - Added `exclude` parameter to `full_clean()` to skip auto-computed fields
+  - File validation (extension/size) still happens early via `clean()` method
+
 ## [0.2.6] - 2025-11-21
 
 ### Added
