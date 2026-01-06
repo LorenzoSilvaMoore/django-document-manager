@@ -727,7 +727,8 @@ class Document(BaseModel):
         with transaction.atomic():
             if current:
                 current.is_current = False
-                current.save(update_fields=['is_current'])
+                current.replaced_by = version
+                current.save(update_fields=['is_current', 'replaced_by'])
 
             version.is_current = True
             version.save(update_fields=['is_current'])
