@@ -3,7 +3,6 @@
 
 # Core private dependencies (install in this order)
 git+https://github.com/LorenzoSilvaMoore/django-crud-audit.git@main#egg=django-crud-audit
-
 git+https://github.com/LorenzoSilvaMoore/django-catalogs.git@main#egg=django-catalogs
 
 # Optional: Also install django-iso-3166 if needed
