@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [0.2.8] - 2026-01-09
+
+### Added
+
+- **Document Tag Field**: New optional `tag` field on Document model
+  - CharField with max_length=100 for flexible document categorization
+  - Nullable and optional (blank=True, null=True)
+  - Indexed for efficient tag-based queries via `idx_document_tag`
+  - Enables custom tagging and grouping of documents beyond document type
+  - Migration: `0006_document_tag_document_idx_document_tag.py`
+
 ## [0.2.7] - 2025-11-23
 
 ### Added

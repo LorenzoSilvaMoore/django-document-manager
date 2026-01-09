@@ -541,6 +541,12 @@ class Document(BaseModel):
         blank=True,
         help_text=_("Detailed description of document contents")
     )
+    tag = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text=_("Optional tag for categorizing the document")
+    )
     
     # Date Information
     expiration_date = models.DateField(
@@ -699,6 +705,8 @@ class Document(BaseModel):
 
             # Composite index for owner queries by type
             models.Index(fields=['owner_uuid', 'document_type'], name='idx_owner_type'),
+
+            models.Index(fields=['tag'], name='idx_document_tag'),
         ]
         constraints = [
             models.UniqueConstraint(
